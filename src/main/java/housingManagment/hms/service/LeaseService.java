@@ -1,6 +1,5 @@
 package housingManagment.hms.service;
 
-
 import housingManagment.hms.dto.FamilyMemberDTO;
 import housingManagment.hms.dto.LeaseCreateDTO;
 import housingManagment.hms.entities.Lease;
@@ -24,6 +23,8 @@ public interface LeaseService {
 
     List<Lease> getLeasesByProperty(UUID propertyId);
 
+    List<Lease> getActiveLeasesByProperty(UUID propertyId);
+
     List<Lease> getLeasesByTenant(UUID tenantId);
 
     List<Lease> getLeasesByStatus(LeaseStatus status);
@@ -39,6 +40,5 @@ public interface LeaseService {
     List<Lease> searchLeases(String keyword);
 
     Lease addFamilyMembersToLease(UUID leaseId, List<FamilyMemberDTO> familyMemberDTOs);
-
 
 }
