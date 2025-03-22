@@ -3,7 +3,7 @@ package housingManagment.hms.service.userService.impl;
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.FamilyMember;
 import housingManagment.hms.entities.userEntity.Student;
-import housingManagment.hms.repository.userRepository.BaseUserRepository;
+import housingManagment.hms.repository.userRepository.UserRepository;
 import housingManagment.hms.repository.userRepository.FamilyMemberRepository;
 import housingManagment.hms.service.userService.FamilyMemberService;
 import org.springframework.stereotype.Service;
@@ -11,14 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 public class FamilyMemberServiceImpl implements FamilyMemberService {
 
     private final FamilyMemberRepository familyMemberRepository;
-    private final BaseUserRepository baseUserRepository;
+    private final UserRepository baseUserRepository;
 
-    public FamilyMemberServiceImpl(FamilyMemberRepository familyMemberRepository, BaseUserRepository baseUserRepository) {
+    public FamilyMemberServiceImpl(FamilyMemberRepository familyMemberRepository,
+            UserRepository baseUserRepository) {
         this.familyMemberRepository = familyMemberRepository;
         this.baseUserRepository = baseUserRepository;
     }
@@ -30,8 +32,11 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
     @Override
     @Transactional
     public FamilyMember createFamilyMember(FamilyMember familyMember) {
-        BaseUser mainUser = baseUserRepository.findById(familyMember.getMainUser().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Основной пользователь не найден"));
+        Optional<?> userOptional = baseUserRepository.findById(familyMember.getMainUser().getId());
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("Основной пользователь не найден");
+        }
+        BaseUser mainUser = (BaseUser) userOptional.get();
 
         if (mainUser instanceof Student) {
             throw new IllegalArgumentException("Члены семьи не могут быть привязаны к студенту.");

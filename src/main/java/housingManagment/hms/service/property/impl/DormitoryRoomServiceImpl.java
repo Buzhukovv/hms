@@ -8,6 +8,7 @@ import housingManagment.hms.service.property.DormitoryRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +44,8 @@ public class DormitoryRoomServiceImpl implements DormitoryRoomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "propertyQueries", key = "#id")
     public DormitoryRoom getPropertyById(UUID id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("DormitoryRoom not found with id: " + id));

@@ -31,3 +31,20 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Reports ###
+
+### Sensitive Data ###
+*.env
+*.pem
+*.key
+*credentials*
+*password*
+*secret*
+*token*
+*config.json
+*.properties
+
+### OS Specific ###
+.DS_Store
+Thumbs.db

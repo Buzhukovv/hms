@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+
+<head>
+    <title>Maintenance Request Details - Housing Management System</title>
+</head>
+
+<body>
+    <section>
+        <div class="container-fluid px-4">
+            <!-- Header with actions -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    Request <span th:text="${request.requestNumber}">MR-12345</span>
+                </h1>
+                <div>
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/maintenance-requests}">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                    <a class="btn btn-sm btn-outline-secondary" href="#" data-bs-toggle="modal"
+                        data-bs-target="#editRequestModal">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    <a class="btn btn-sm btn-outline-secondary"
+                        th:href="@{/api/maintenance-requests/{id}(id=${request.id})}">
+                        <i class="bi bi-code-slash"></i> API Endpoint
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Request Information -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Request Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <h4 th:text="${request.title}">Leaking Sink</h4>
+                            <div class="badge bg-primary me-2 mb-3">
+                                Maintenance
+                            </div>
+                            <div th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).PENDING.name()}"
+                                class="badge bg-warning me-2 mb-3">Pending</div>
+                            <div th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).IN_PROGRESS.name()}"
+                                class="badge bg-info me-2 mb-3">In Progress</div>
+                            <div th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).COMPLETED.name()}"
+                                class="badge bg-success me-2 mb-3">Completed</div>
+                            <div th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).CANCELLED.name()}"
+                                class="badge bg-secondary me-2 mb-3">Cancelled</div>
+
+                            <p class="card-text" th:text="${request.description}">
+                                The kitchen sink has been leaking for the past two days. Water is collecting in the
+                                cabinet
+                                below.
+                            </p>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted">Created:</div>
+                                <div class="col-sm-8"
+                                    th:text="${#temporals.format(request.createdAt, 'MMM dd, yyyy - HH:mm')}">Jan 1,
+                                    2023 -
+                                    10:45</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted">Last Updated:</div>
+                                <div class="col-sm-8"
+                                    th:text="${#temporals.format(request.updatedAt, 'MMM dd, yyyy - HH:mm')}">Jan 2,
+                                    2023 -
+                                    15:30</div>
+                            </div>
+                            <div class="row mb-3" th:if="${request.completedAt != null}">
+                                <div class="col-sm-4 text-muted">Completed:</div>
+                                <div class="col-sm-8"
+                                    th:text="${#temporals.format(request.completedAt, 'MMM dd, yyyy - HH:mm')}">Jan 5,
+                                    2023
+                                    - 11:20</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Information -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Financial Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted">Service Charge:</div>
+                                <div class="col-sm-8">
+                                    <span th:if="${request.serviceCharge != null}"
+                                        th:text="${'$' + #numbers.formatDecimal(request.serviceCharge, 1, 2)}">$50.00</span>
+                                    <span th:unless="${request.serviceCharge != null}" class="text-muted">Not set</span>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted">Payment Status:</div>
+                                <div class="col-sm-8">
+                                    <span th:if="${request.isPaid}" class="badge bg-success">Paid</span>
+                                    <span th:unless="${request.isPaid}" class="badge bg-danger">Not Paid</span>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted">Total Cost:</div>
+                                <div class="col-sm-8">
+                                    <span th:if="${request.serviceCharge != null}"
+                                        th:text="${'$' + #numbers.formatDecimal(request.serviceCharge, 1, 2)}">$50.00</span>
+                                    <span th:unless="${request.serviceCharge != null}" class="text-muted">Not set</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Requester Information -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Requester Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${request.requesterId != null}">
+                                <div class="row mb-3">
+                                    <div class="col-sm-4 text-muted">Name:</div>
+                                    <div class="col-sm-8">
+                                        <a th:href="@{/students/{id}(id=${request.requesterId})}"
+                                            th:text="${requesterName}">John Doe</a>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-sm-4 text-muted">Contact:</div>
+                                    <div class="col-sm-8" th:text="${requesterContact}">john.doe@example.com</div>
+                                </div>
+                            </div>
+                            <div th:unless="${request.requesterId != null}" class="alert alert-warning">
+                                No requester information available
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Property Information -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Property Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${request.leaseId != null}">
+                                <div class="row mb-3">
+                                    <div class="col-sm-4 text-muted">Lease:</div>
+                                    <div class="col-sm-8">
+                                        <a th:href="@{/leases/{id}(id=${request.leaseId})}"
+                                            th:text="${leaseNumber != null ? leaseNumber : 'Lease ' + request.leaseId}">L-12345</a>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-sm-4 text-muted">Property:</div>
+                                    <div class="col-sm-8">
+                                        <a th:if="${propertyId != null}"
+                                            th:href="@{/dormitory-rooms/{id}(id=${propertyId})}"
+                                            th:text="${propertyNumber != null ? propertyNumber : 'Property ' + propertyId}">Room
+                                            101</a>
+                                        <span th:unless="${propertyId != null}" class="text-muted">Unknown</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:unless="${request.leaseId != null}" class="alert alert-warning">
+                                No property information available
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assigned Maintenance Staff -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Assigned Maintenance Staff</h5>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                data-bs-target="#assignStaffModal">
+                                <i class="bi bi-person-plus"></i> Assign Staff
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${request.assignedToId != null}">
+                                <div class="row mb-3">
+                                    <div class="col-sm-4 text-muted">Name:</div>
+                                    <div class="col-sm-8">
+                                        <a th:href="@{/maintenance/{id}(id=${request.assignedToId})}"
+                                            th:text="${assignedToName != null ? assignedToName : 'Unknown'}">Mike
+                                            Smith</a>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-sm-4 text-muted">Contact:</div>
+                                    <div class="col-sm-8"
+                                        th:text="${assignedToContact != null ? assignedToContact : 'No contact information'}">
+                                        mike.smith@example.com
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:unless="${request.assignedToId != null}" class="alert alert-warning">
+                                No maintenance staff assigned yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Notes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p th:if="${request.notes != null && !request.notes.isEmpty()}" th:text="${request.notes}">
+                                Need to bring extra pipe fittings. Scheduled for tomorrow morning.
+                            </p>
+                            <div th:unless="${request.notes != null && !request.notes.isEmpty()}"
+                                class="alert alert-info">
+                                No notes added yet
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                    data-bs-target="#addNoteModal">
+                                    <i class="bi bi-pencil-square"></i> Add Note
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Update -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Status Update</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button
+                            th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).PENDING.name()}"
+                            class="btn btn-primary">
+                            <i class="bi bi-play-fill"></i> Start Work
+                        </button>
+                        <button
+                            th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).IN_PROGRESS.name()}"
+                            class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Mark as Completed
+                        </button>
+                        <button
+                            th:unless="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).COMPLETED.name() 
+                                        || request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).CANCELLED.name()}"
+                            class="btn btn-danger">
+                            <i class="bi bi-x-circle"></i> Cancel Request
+                        </button>
+                        <button th:if="${request.assignedToId == null}" class="btn btn-outline-primary"
+                            data-bs-toggle="modal" data-bs-target="#assignStaffModal">
+                            <i class="bi bi-person-plus"></i> Assign Maintenance Staff
+                        </button>
+                        <button th:if="${!request.isPaid && request.serviceCharge != null}"
+                            class="btn btn-outline-success">
+                            <i class="bi bi-cash"></i> Mark as Paid
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assign Staff Modal -->
+            <div class="modal fade" id="assignStaffModal" tabindex="-1" aria-labelledby="assignStaffModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="assignStaffModalLabel">Assign Maintenance Staff</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="assignStaffForm"
+                                th:action="@{/api/maintenance-requests/{id}/assign/{staffId}(id=${request.id}, staffId='')}"
+                                method="POST">
+                                <div class="mb-3">
+                                    <!-- Header with actions -->
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <h1 class="h2">
+                                            Request <span th:text="${request.requestNumber}">MR-12345</span>
+                                        </h1>
+                                        <div>
+                                            <a class="btn btn-sm btn-outline-secondary"
+                                                th:href="@{/maintenance-requests}">
+                                                <i class="bi bi-arrow-left"></i> Back to List
+                                            </a>
+                                            <a class="btn btn-sm btn-outline-secondary" href="#" data-bs-toggle="modal"
+                                                data-bs-target="#editRequestModal">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                            <a class="btn btn-sm btn-outline-secondary"
+                                                th:href="@{/api/maintenance-requests/{id}(id=${request.id})}">
+                                                <i class="bi bi-code-slash"></i> API Endpoint
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <!-- Request Information -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100">
+                                                <div class="card-header">
+                                                    <h5 class="card-title mb-0">Request Information</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <h4 th:text="${request.title}">Leaking Sink</h4>
+                                                    <div class="badge bg-primary me-2 mb-3">
+                                                        Maintenance
+                                                    </div>
+                                                    <div th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).PENDING.name()}"
+                                                        class="badge bg-warning me-2 mb-3">Pending</div>
+                                                    <div th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).IN_PROGRESS.name()}"
+                                                        class="badge bg-info me-2 mb-3">In Progress</div>
+                                                    <div th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).COMPLETED.name()}"
+                                                        class="badge bg-success me-2 mb-3">Completed</div>
+                                                    <div th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).CANCELLED.name()}"
+                                                        class="badge bg-secondary me-2 mb-3">Cancelled</div>
+
+                                                    <p class="card-text" th:text="${request.description}">
+                                                        The kitchen sink has been leaking for the past two days. Water
+                                                        is collecting in the cabinet
+                                                        below.
+                                                    </p>
+
+                                                    <div class="row mb-3">
+                                                        <div class="col-sm-4 text-muted">Created:</div>
+                                                        <div class="col-sm-8"
+                                                            th:text="${#temporals.format(request.createdAt, 'MMM dd, yyyy - HH:mm')}">
+                                                            Jan 1, 2023 -
+                                                            10:45</div>
+                                                    </div>
+                                                    <div class="row mb-3">
+                                                        <div class="col-sm-4 text-muted">Last Updated:</div>
+                                                        <div class="col-sm-8"
+                                                            th:text="${#temporals.format(request.updatedAt, 'MMM dd, yyyy - HH:mm')}">
+                                                            Jan 2, 2023 -
+                                                            15:30</div>
+                                                    </div>
+                                                    <div class="row mb-3" th:if="${request.completedAt != null}">
+                                                        <div class="col-sm-4 text-muted">Completed:</div>
+                                                        <div class="col-sm-8"
+                                                            th:text="${#temporals.format(request.completedAt, 'MMM dd, yyyy - HH:mm')}">
+                                                            Jan 5, 2023
+                                                            - 11:20</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Financial Information -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100">
+                                                <div class="card-header">
+                                                    <h5 class="card-title mb-0">Financial Information</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row mb-3">
+                                                        <div class="col-sm-4 text-muted">Service Charge:</div>
+                                                        <div class="col-sm-8">
+                                                            <span th:if="${request.serviceCharge != null}"
+                                                                th:text="${'$' + #numbers.formatDecimal(request.serviceCharge, 1, 2)}">$50.00</span>
+                                                            <span th:unless="${request.serviceCharge != null}"
+                                                                class="text-muted">Not set</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-3">
+                                                        <div class="col-sm-4 text-muted">Payment Status:</div>
+                                                        <div class="col-sm-8">
+                                                            <span th:if="${request.isPaid}"
+                                                                class="badge bg-success">Paid</span>
+                                                            <span th:unless="${request.isPaid}"
+                                                                class="badge bg-danger">Not Paid</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-3">
+                                                        <div class="col-sm-4 text-muted">Total Cost:</div>
+                                                        <div class="col-sm-8">
+                                                            <span th:if="${request.serviceCharge != null}"
+                                                                th:text="${'$' + #numbers.formatDecimal(request.serviceCharge, 1, 2)}">$50.00</span>
+                                                            <span th:unless="${request.serviceCharge != null}"
+                                                                class="text-muted">Not set</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Requester Information -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100">
+                                                <div class="card-header">
+                                                    <h5 class="card-title mb-0">Requester Information</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div th:if="${request.requesterId != null}">
+                                                        <div class="row mb-3">
+                                                            <div class="col-sm-4 text-muted">Name:</div>
+                                                            <div class="col-sm-8">
+                                                                <a th:href="@{/students/{id}(id=${request.requesterId})}"
+                                                                    th:text="${requesterName}">John Doe</a>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mb-3">
+                                                            <div class="col-sm-4 text-muted">Contact:</div>
+                                                            <div class="col-sm-8" th:text="${requesterContact}">
+                                                                john.doe@example.com</div>
+                                                        </div>
+                                                    </div>
+                                                    <div th:unless="${request.requesterId != null}"
+                                                        class="alert alert-warning">
+                                                        No requester information available
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Property Information -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100">
+                                                <div class="card-header">
+                                                    <h5 class="card-title mb-0">Property Information</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div th:if="${request.leaseId != null}">
+                                                        <div class="row mb-3">
+                                                            <div class="col-sm-4 text-muted">Lease:</div>
+                                                            <div class="col-sm-8">
+                                                                <a th:href="@{/leases/{id}(id=${request.leaseId})}"
+                                                                    th:text="${leaseNumber != null ? leaseNumber : 'Lease ' + request.leaseId}">L-12345</a>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mb-3">
+                                                            <div class="col-sm-4 text-muted">Property:</div>
+                                                            <div class="col-sm-8">
+                                                                <a th:if="${propertyId != null}"
+                                                                    th:href="@{/dormitory-rooms/{id}(id=${propertyId})}"
+                                                                    th:text="${propertyNumber != null ? propertyNumber : 'Property ' + propertyId}">Room
+                                                                    101</a>
+                                                                <span th:unless="${propertyId != null}"
+                                                                    class="text-muted">Unknown</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div th:unless="${request.leaseId != null}"
+                                                        class="alert alert-warning">
+                                                        No property information available
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Assigned Maintenance Staff -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100">
+                                                <div
+                                                    class="card-header d-flex justify-content-between align-items-center">
+                                                    <h5 class="card-title mb-0">Assigned Maintenance Staff</h5>
+                                                    <button class="btn btn-sm btn-outline-primary"
+                                                        data-bs-toggle="modal" data-bs-target="#assignStaffModal">
+                                                        <i class="bi bi-person-plus"></i> Assign Staff
+                                                    </button>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div th:if="${request.assignedToId != null}">
+                                                        <div class="row mb-3">
+                                                            <div class="col-sm-4 text-muted">Name:</div>
+                                                            <div class="col-sm-8">
+                                                                <a th:href="@{/maintenance/{id}(id=${request.assignedToId})}"
+                                                                    th:text="${assignedToName != null ? assignedToName : 'Unknown'}">Mike
+                                                                    Smith</a>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mb-3">
+                                                            <div class="col-sm-4 text-muted">Contact:</div>
+                                                            <div class="col-sm-8"
+                                                                th:text="${assignedToContact != null ? assignedToContact : 'No contact information'}">
+                                                                mike.smith@example.com
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div th:unless="${request.assignedToId != null}"
+                                                        class="alert alert-warning">
+                                                        No maintenance staff assigned yet
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Notes -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100">
+                                                <div class="card-header">
+                                                    <h5 class="card-title mb-0">Notes</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <p th:if="${request.notes != null && !request.notes.isEmpty()}"
+                                                        th:text="${request.notes}">
+                                                        Need to bring extra pipe fittings. Scheduled for tomorrow
+                                                        morning.
+                                                    </p>
+                                                    <div th:unless="${request.notes != null && !request.notes.isEmpty()}"
+                                                        class="alert alert-info">
+                                                        No notes added yet
+                                                    </div>
+
+                                                    <div class="mt-3">
+                                                        <button class="btn btn-sm btn-outline-primary"
+                                                            data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                                                            <i class="bi bi-pencil-square"></i> Add Note
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Status Update -->
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">Status Update</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <button
+                                                    th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).PENDING.name()}"
+                                                    class="btn btn-primary">
+                                                    <i class="bi bi-play-fill"></i> Start Work
+                                                </button>
+                                                <button
+                                                    th:if="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).IN_PROGRESS.name()}"
+                                                    class="btn btn-success">
+                                                    <i class="bi bi-check-circle"></i> Mark as Completed
+                                                </button>
+                                                <button
+                                                    th:unless="${request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).COMPLETED.name() 
+                                    || request.status.name() == T(housingManagment.hms.enums.MaintenanceRequestStatus).CANCELLED.name()}"
+                                                    class="btn btn-danger">
+                                                    <i class="bi bi-x-circle"></i> Cancel Request
+                                                </button>
+                                                <button th:if="${request.assignedToId == null}"
+                                                    class="btn btn-outline-primary" data-bs-toggle="modal"
+                                                    data-bs-target="#assignStaffModal">
+                                                    <i class="bi bi-person-plus"></i> Assign Maintenance Staff
+                                                </button>
+                                                <button th:if="${!request.isPaid && request.serviceCharge != null}"
+                                                    class="btn btn-outline-success">
+                                                    <i class="bi bi-cash"></i> Mark as Paid
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Assign Staff Modal -->
+                                    <div class="modal fade" id="assignStaffModal" tabindex="-1"
+                                        aria-labelledby="assignStaffModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="assignStaffModalLabel">Assign
+                                                        Maintenance Staff</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form id="assignStaffForm"
+                                                        th:action="@{/api/maintenance-requests/{id}/assign/{staffId}(id=${request.id}, staffId='')}"
+                                                        method="POST">
+                                                        <div class="mb-3">
+                                                            <label for="staffId" class="form-label">Select Maintenance
+                                                                Staff</label>
+                                                            <select class="form-select" id="staffId" name="staffId"
+                                                                required>
+                                                                <option value="">-- Select Staff --</option>
+                                                                <!-- This will be populated by JavaScript -->
+                                                            </select>
+                                                        </div>
+                                                        <div class="d-grid">
+                                                            <button type="submit" class="btn btn-primary">Assign
+                                                                Staff</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Add Note Modal -->
+                                    <div class="modal fade" id="addNoteModal" tabindex="-1"
+                                        aria-labelledby="addNoteModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="addNoteModalLabel">Add Note</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form id="addNoteForm"
+                                                        th:action="@{/api/maintenance-requests/{id}(id=${request.id})}"
+                                                        method="POST">
+                                                        <div class="mb-3">
+                                                            <label for="notes" class="form-label">Note</label>
+                                                            <textarea class="form-control" id="notes" name="notes"
+                                                                rows="3" required th:text="${request.notes}"></textarea>
+                                                        </div>
+                                                        <div class="d-grid">
+                                                            <button type="submit" class="btn btn-primary">Save
+                                                                Note</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- JavaScript for modals -->
+                                    <script th:inline="javascript">
+                                        document.addEventListener('DOMContentLoaded', function () {
+                                            // For assign staff modal
+                                            const assignStaffForm = document.getElementById('assignStaffForm');
+                                            const staffSelect = document.getElementById('staffId');
+
+                                            // Fetch maintenance staff when the modal is shown
+                                            const assignStaffModal = document.getElementById('assignStaffModal');
+                                            assignStaffModal.addEventListener('show.bs.modal', function () {
+                                                fetch('/api/maintenance')
+                                                    .then(response => response.json())
+                                                    .then(staff => {
+                                                        // Clear existing options
+                                                        staffSelect.innerHTML = '<option value="">-- Select Staff --</option>';
+
+                                                        // Add staff options
+                                                        staff.forEach(member => {
+                                                            const option = document.createElement('option');
+                                                            option.value = member.id;
+                                                            option.textContent = member.firstName + ' ' + member.lastName;
+                                                            staffSelect.appendChild(option);
+                                                        });
+                                                    })
+                                                    .catch(error => console.error('Error fetching maintenance staff:', error));
+                                            });
+
+                                            // Handle form submission
+                                            assignStaffForm.addEventListener('submit', function (event) {
+                                                event.preventDefault();
+
+                                                const staffId = staffSelect.value;
+                                                if (!staffId) {
+                                                    alert('Please select a staff member');
+                                                    return;
+                                                }
+
+                                                const url = `/api/maintenance-requests/${/*[[${request.id}]]*/'123'}/assign/${staffId}`;
+
+                                                fetch(url, {
+                                                    method: 'PUT',
+                                                    headers: {
+                                                        'Content-Type': 'application/json'
+                                                    }
+                                                })
+                                                    .then(response => {
+                                                        if (!response.ok) {
+                                                            throw new Error('Failed to assign staff');
+                                                        }
+                                                        return response.json();
+                                                    })
+                                                    .then(() => {
+                                                        // Reload the page to show the updated assignment
+                                                        window.location.reload();
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error:', error);
+                                                        alert('Failed to assign staff. Please try again.');
+                                                    });
+                                            });
+
+                                            // For add note modal
+                                            const addNoteForm = document.getElementById('addNoteForm');
+
+                                            addNoteForm.addEventListener('submit', function (event) {
+                                                event.preventDefault();
+
+                                                const notes = document.getElementById('notes').value;
+
+                                                fetch(`/api/maintenance-requests/${/*[[${request.id}]]*/'123'}`, {
+                                                    method: 'PUT',
+                                                    headers: {
+                                                        'Content-Type': 'application/json'
+                                                    },
+                                                    body: JSON.stringify({
+                                                        notes: notes,
+                                                        id: /*[[${request.id}]]*/'123'
+                                                    })
+                                                })
+                                                    .then(response => {
+                                                        if (!response.ok) {
+                                                            throw new Error('Failed to update notes');
+                                                        }
+                                                        return response.json();
+                                                    })
+                                                    .then(() => {
+                                                        // Reload the page to show the updated notes
+                                                        window.location.reload();
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error:', error);
+                                                        alert('Failed to update notes. Please try again.');
+                                                    });
+                                            });
+                                        });
+                                    </script>
+    </section>
+</body>
+
+</html>

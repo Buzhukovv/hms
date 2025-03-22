@@ -2,10 +2,31 @@ package housingManagment.hms.repository.userRepository;
 
 import housingManagment.hms.entities.userEntity.BaseUser;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
-@Repository
-public interface BaseUserRepository extends JpaRepository<BaseUser, UUID> {
+@NoRepositoryBean
+public interface BaseUserRepository<T extends BaseUser> extends JpaRepository<T, UUID> {
+
+        Optional<T> findByEmail(String email);
+
+        /**
+         * Count all users
+         */
+        @Query("SELECT COUNT(u) FROM #{#entityName} u")
+        long countTenants();
+
+        /**
+         * Count users by type
+         */
+        @Query("SELECT TYPE(u) as userType, COUNT(u) as count " +
+                        "FROM #{#entityName} u " +
+                        "GROUP BY TYPE(u)")
+        Map<String, Object> countAllTenantTypes();
 }

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+
+<head>
+    <title>Reports - Housing Management System</title>
+    <style>
+        .report-filters {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .export-buttons {
+            margin-top: 10px;
+        }
+
+        .export-btn {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <section>
+        <div class="container-fluid px-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mt-4">Reports Dashboard</h1>
+                <div>
+                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#reportFiltersCollapse" aria-expanded="false"
+                        aria-controls="reportFiltersCollapse">
+                        <i class="fas fa-filter me-1"></i> Show Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Report Filters -->
+            <div class="collapse mb-4" id="reportFiltersCollapse">
+                <div class="card report-filters">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Report Filters</h5>
+                        <form id="reportFilterForm" method="get" action="/reports">
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-3">
+                                    <label for="reportType" class="form-label">Report Type</label>
+                                    <select class="form-select" id="reportType" name="reportType">
+                                        <option value="all"
+                                            th:selected="${param.reportType == null || param.reportType[0] == 'all'}">
+                                            All Reports</option>
+                                        <option value="occupancy"
+                                            th:selected="${param.reportType != null && param.reportType[0] == 'occupancy'}">
+                                            Occupancy</option>
+                                        <option value="maintenance"
+                                            th:selected="${param.reportType != null && param.reportType[0] == 'maintenance'}">
+                                            Maintenance</option>
+                                        <option value="tenant"
+                                            th:selected="${param.reportType != null && param.reportType[0] == 'tenant'}">
+                                            Tenant</option>
+                                        <option value="financial"
+                                            th:selected="${param.reportType != null && param.reportType[0] == 'financial'}">
+                                            Financial</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label for="startDate" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="startDate" name="startDate"
+                                        th:value="${param.startDate != null ? param.startDate[0] : T(java.time.LocalDate).now().minusMonths(1)}">
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label for="endDate" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="endDate" name="endDate"
+                                        th:value="${param.endDate != null ? param.endDate[0] : T(java.time.LocalDate).now()}">
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label for="location" class="form-label">Location</label>
+                                    <select class="form-select" id="location" name="location">
+                                        <option value="">All Locations</option>
+                                        <option th:each="block : ${occupancyByBlock.keySet()}" th:value="${block}"
+                                            th:text="${block}"
+                                            th:selected="${param.location != null && param.location[0] == block}">
+                                            Block A
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i> Apply Filters
+                                    </button>
+                                    <a href="/reports" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i> Clear Filters
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Occupancy by Block Report -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4>Occupancy by Block</h4>
+                            <div class="export-buttons">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary export-btn"
+                                        onclick="exportReport('occupancy', 'pdf')">
+                                        <i class="fas fa-file-pdf me-1"></i> PDF
+                                    </button>
+                                    <button class="btn btn-outline-secondary export-btn"
+                                        onclick="exportReport('occupancy', 'excel')">
+                                        <i class="fas fa-file-excel me-1"></i> Excel
+                                    </button>
+                                    <button class="btn btn-outline-secondary export-btn"
+                                        onclick="exportReport('occupancy', 'csv')">
+                                        <i class="fas fa-file-csv me-1"></i> CSV
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="occupancyChart" width="400" height="250"></canvas>
+                            <div class="table-responsive mt-3">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Block</th>
+                                            <th class="text-end">Occupancy Rate</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="entry : ${occupancyByBlock}">
+                                            <td th:text="${entry.key}">Block A</td>
+                                            <td class="text-end" th:text="${entry.value + '%'}">85.5%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maintenance Requests by Status Report -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4>Maintenance Requests by Status</h4>
+                            <div class="export-buttons">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary export-btn"
+                                        onclick="exportReport('maintenance', 'pdf')">
+                                        <i class="fas fa-file-pdf me-1"></i> PDF
+                                    </button>
+                                    <button class="btn btn-outline-secondary export-btn"
+                                        onclick="exportReport('maintenance', 'excel')">
+                                        <i class="fas fa-file-excel me-1"></i> Excel
+                                    </button>
+                                    <button class="btn btn-outline-secondary export-btn"
+                                        onclick="exportReport('maintenance', 'csv')">
+                                        <i class="fas fa-file-csv me-1"></i> CSV
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="maintenanceChart" width="400" height="250"></canvas>
+                            <div class="table-responsive mt-3">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Status</th>
+                                            <th class="text-end">Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="entry : ${maintenanceByStatus}">
+                                            <td>
+                                                <span th:text="${entry.key}" th:class="${'badge ' + 
+                                                      (entry.key == 'COMPLETED' ? 'bg-success' : 
+                                                       entry.key == 'IN_PROGRESS' ? 'bg-primary' : 
+                                                       entry.key == 'PENDING' ? 'bg-warning' : 
+                                                       entry.key == 'CANCELLED' ? 'bg-secondary' : 
+                                                       entry.key == 'REJECTED' ? 'bg-danger' : 
+                                                       entry.key == 'APPROVED' ? 'bg-info' : 
+                                                       entry.key == 'PAID' ? 'bg-success text-white' : 'bg-light')}">
+                                                    Pending
+                                                </span>
+                                            </td>
+                                            <td class="text-end" th:text="${entry.value}">10</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expiring Leases Report -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4>Leases Expiring in Next 30 Days (Total: <span th:text="${expiringLeaseCount}">0</span>)
+                            </h4>
+                            <div class="export-buttons">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary export-btn"
+                                        onclick="exportReport('leases', 'pdf')">
+                                        <i class="fas fa-file-pdf me-1"></i> PDF
+                                    </button>
+                                    <button class="btn btn-outline-secondary export-btn"
+                                        onclick="exportReport('leases', 'excel')">
+                                        <i class="fas fa-file-excel me-1"></i> Excel
+                                    </button>
+                                    <button class="btn btn-outline-secondary export-btn"
+                                        onclick="exportReport('leases', 'csv')">
+                                        <i class="fas fa-file-csv me-1"></i> CSV
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${#lists.isEmpty(expiringLeases)}" class="alert alert-info">
+                                No leases are expiring within the next 30 days.
+                            </div>
+                            <div th:unless="${#lists.isEmpty(expiringLeases)}" class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Lease #</th>
+                                            <th>Tenant</th>
+                                            <th>Property</th>
+                                            <th>End Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="lease : ${expiringLeases}">
+                                            <td th:text="${lease.leaseNumber}">L-12345</td>
+                                            <td th:if="${lease.tenant != null}"
+                                                th:text="${lease.tenant.firstName + ' ' + lease.tenant.lastName}">John
+                                                Doe</td>
+                                            <td th:unless="${lease.tenant != null}">Unknown</td>
+                                            <td th:if="${lease.property != null}"
+                                                th:text="${lease.property.propertyNumber}">Room 101</td>
+                                            <td th:unless="${lease.property != null}">Unknown</td>
+                                            <td th:text="${#temporals.format(lease.endDate, 'dd MMM yyyy')}">31 Dec 2023
+                                            </td>
+                                            <td>
+                                                <a th:href="@{'/leases/' + ${lease.id}}"
+                                                    class="btn btn-sm btn-outline-primary">View</a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts JS -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function () {
+                // Occupancy by Block Chart
+                const occupancyData = /*[[${occupancyByBlock}]]*/ {};
+                const occupancyLabels = Object.keys(occupancyData);
+                const occupancyValues = Object.values(occupancyData);
+
+                new Chart(document.getElementById('occupancyChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: occupancyLabels,
+                        datasets: [{
+                            label: 'Occupancy Rate (%)',
+                            data: occupancyValues,
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+
+                // Maintenance Requests by Status Chart
+                const maintenanceData = /*[[${maintenanceByStatus}]]*/ {};
+                const maintenanceLabels = Object.keys(maintenanceData);
+                const maintenanceValues = Object.values(maintenanceData);
+
+                const colorMap = {
+                    'COMPLETED': 'rgba(40, 167, 69, 0.5)',
+                    'PENDING': 'rgba(255, 193, 7, 0.5)',
+                    'IN_PROGRESS': 'rgba(0, 123, 255, 0.5)',
+                    'CANCELLED': 'rgba(108, 117, 125, 0.5)',
+                    'REJECTED': 'rgba(220, 53, 69, 0.5)',
+                    'APPROVED': 'rgba(23, 162, 184, 0.5)',
+                    'PAID': 'rgba(40, 167, 69, 0.5)'
+                };
+
+                const backgroundColors = maintenanceLabels.map(label =>
+                    colorMap[label] || 'rgba(200, 200, 200, 0.5)');
+
+                new Chart(document.getElementById('maintenanceChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: maintenanceLabels,
+                        datasets: [{
+                            data: maintenanceValues,
+                            backgroundColor: backgroundColors,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Function to trigger report exports
+            function exportReport(reportType, format) {
+                // Get current filter values
+                const startDate = document.getElementById('startDate').value || '';
+                const endDate = document.getElementById('endDate').value || '';
+                const location = document.getElementById('location').value || '';
+
+                // Build URL with query parameters
+                let url = `/reports/export?reportType=${reportType}&format=${format}`;
+                if (startDate) url += `&startDate=${startDate}`;
+                if (endDate) url += `&endDate=${endDate}`;
+                if (location) url += `&location=${location}`;
+
+                // Open in new window to trigger download
+                window.open(url, '_blank');
+            }
+        </script>
+    </section>
+</body>
+
+</html>
