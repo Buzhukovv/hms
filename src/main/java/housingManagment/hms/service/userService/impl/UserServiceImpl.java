@@ -188,6 +188,7 @@ public class UserServiceImpl implements UserService {
             return student;
         }
 
+
         Optional<Teacher> teacher = teacherRepository.findByEmail(email);
         if (teacher.isPresent()) {
             return teacher;

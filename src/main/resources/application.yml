@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/hms
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://localhost:5432/hms_db
+    username: hms_user
+    password: hms_password
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
