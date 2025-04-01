@@ -1,25 +1,27 @@
 package housingManagment.hms.entities.property;
 
 import housingManagment.hms.entities.Lease;
+import housingManagment.hms.enums.property.OnCampusApartmentType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "property_campus_apartments")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(callSuper = true)
+@DiscriminatorValue("CampusApartment")
 public class CampusApartment extends BaseProperty {
+    @Enumerated(EnumType.STRING)
+    private OnCampusApartmentType onCampusApartmentType;
 
     @Column(nullable = false)
     private Double area;
-
-
 }

@@ -1,0 +1,2 @@
+-- Mark existing schema as V2.
+-- This is just a placeholder file to establish version control for future migrations. 

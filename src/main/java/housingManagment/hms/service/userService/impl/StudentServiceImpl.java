@@ -1,6 +1,8 @@
 package housingManagment.hms.service.userService.impl;
 
 import housingManagment.hms.entities.userEntity.Student;
+import housingManagment.hms.enums.userEnum.schools.SchoolsAndSpecialties;
+import housingManagment.hms.enums.userEnum.StudentRole;
 import housingManagment.hms.exception.ResourceNotFoundException;
 import housingManagment.hms.repository.userRepository.StudentRepository;
 import housingManagment.hms.service.userService.StudentService;
@@ -66,33 +68,33 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional(readOnly = true)
     public List<Student> searchUsersByNameOrLastName(String keyword) {
-        return repository.findAll().stream()
-                .filter(user -> user.getFirstName().toLowerCase().contains(keyword.toLowerCase()) ||
-                                user.getLastName().toLowerCase().contains(keyword.toLowerCase()))
-                .collect(Collectors.toList());
+        return repository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(keyword, keyword);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Student> getUsersByRole(String role) {
-        return repository.findAll().stream()
-                .filter(user -> user.getRole().name().equalsIgnoreCase(role))
-                .collect(Collectors.toList());
+        try {
+            return repository.findByRole(StudentRole.valueOf(role.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            return List.of();
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Student> getUsersBySchool(String school) {
-        return repository.findAll().stream()
-                .filter(user -> user.getSchool().equalsIgnoreCase(school))
-                .collect(Collectors.toList());
+        try {
+            SchoolsAndSpecialties schoolEnum = SchoolsAndSpecialties.fromDisplayName(school);
+            return repository.findBySchool(schoolEnum);
+        } catch (IllegalArgumentException e) {
+            return List.of(); // Return empty list if the school name is invalid
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Student> getUsersBySpecialty(String specialty) {
-        return repository.findAll().stream()
-                .filter(user -> user.getSpecialty().equalsIgnoreCase(specialty))
-                .collect(Collectors.toList());
+        return repository.findBySpecialtyIgnoreCase(specialty);
     }
 }

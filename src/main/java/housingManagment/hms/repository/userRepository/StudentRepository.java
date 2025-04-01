@@ -2,6 +2,7 @@ package housingManagment.hms.repository.userRepository;
 
 import housingManagment.hms.entities.userEntity.Student;
 import housingManagment.hms.enums.userEnum.StudentRole;
+import housingManagment.hms.enums.userEnum.schools.SchoolsAndSpecialties;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,8 +15,8 @@ public interface StudentRepository extends BaseUserRepository<Student> {
     // Поиск по типу студента (MASTER_STUDENT, BACHELOR_DEGREE, DOCTORAL_STUDENT)
     List<Student> findByRole(StudentRole role);
 
-    // Поиск по названию школы (игнорируя регистр)
-    List<Student> findBySchoolIgnoreCase(String school);
+    // Поиск по названию школы
+    List<Student> findBySchool(SchoolsAndSpecialties school);
 
     // Поиск по специальности (игнорируя регистр)
     List<Student> findBySpecialtyIgnoreCase(String specialty);

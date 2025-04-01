@@ -1,6 +1,7 @@
 package housingManagment.hms.service.userService.impl;
 
 import housingManagment.hms.entities.userEntity.Teacher;
+import housingManagment.hms.enums.userEnum.schools.SchoolsAndSpecialties;
 import housingManagment.hms.exception.ResourceNotFoundException;
 import housingManagment.hms.repository.userRepository.TeacherRepository;
 import housingManagment.hms.service.userService.TeacherService;
@@ -64,17 +65,17 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional(readOnly = true)
     public List<Teacher> searchUsersByNameOrLastName(String keyword) {
-        return repository.findAll().stream()
-                .filter(user -> user.getFirstName().toLowerCase().contains(keyword.toLowerCase()) ||
-                                user.getLastName().toLowerCase().contains(keyword.toLowerCase()))
-                .collect(Collectors.toList());
+        return repository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(keyword, keyword);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Teacher> getUsersBySchool(String school) {
-        return repository.findAll().stream()
-                .filter(user -> user.getSchool().equalsIgnoreCase(school))
-                .collect(Collectors.toList());
+        try {
+            SchoolsAndSpecialties schoolEnum = SchoolsAndSpecialties.fromDisplayName(school);
+            return repository.findBySchool(schoolEnum);
+        } catch (IllegalArgumentException e) {
+            return List.of(); // Return empty list if the school name is invalid
+        }
     }
 }

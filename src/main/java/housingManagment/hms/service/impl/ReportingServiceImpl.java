@@ -12,6 +12,7 @@ import housingManagment.hms.enums.ReportFormat;
 import housingManagment.hms.enums.ReportSchedule;
 import housingManagment.hms.enums.ReportType;
 import housingManagment.hms.enums.userEnum.StudentRole;
+import housingManagment.hms.enums.userEnum.schools.SchoolsAndSpecialties;
 import housingManagment.hms.repository.LeaseRepository;
 import housingManagment.hms.repository.MaintenanceRequestRepository;
 import housingManagment.hms.repository.SavedReportRepository;
@@ -204,7 +205,7 @@ public class ReportingServiceImpl implements ReportingService {
         academicPrograms.put("PERCENTAGE_BY_PROGRAM", percentages);
 
         // Also group by school
-        Map<String, Long> schoolDistribution = students.stream()
+        Map<SchoolsAndSpecialties, Long> schoolDistribution = students.stream()
                 .filter(user -> user instanceof Student)
                 .map(user -> (Student) user)
                 .collect(Collectors.groupingBy(Student::getSchool, Collectors.counting()));

@@ -77,4 +77,9 @@ public interface MaintenanceRequestService {
      * Get all maintenance requests
      */
     List<MaintenanceRequestDTO> getAllRequests();
+
+    /**
+     * Get the total count of maintenance requests
+     */
+    long count();
 }

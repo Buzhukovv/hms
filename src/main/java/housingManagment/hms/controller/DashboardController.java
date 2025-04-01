@@ -1,45 +1,91 @@
 package housingManagment.hms.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import housingManagment.hms.dto.LeaseCreateDTO;
+import housingManagment.hms.dto.MaintenanceRequestDTO;
 import housingManagment.hms.entities.Lease;
 import housingManagment.hms.entities.MaintenanceRequest;
-import housingManagment.hms.entities.property.BaseProperty;
-import housingManagment.hms.entities.property.DormitoryRoom;
-import housingManagment.hms.entities.userEntity.Student;
-import housingManagment.hms.enums.property.PropertyStatus;
+import housingManagment.hms.entities.property.*;
+import housingManagment.hms.entities.userEntity.*;
 import housingManagment.hms.enums.LeaseStatus;
 import housingManagment.hms.enums.MaintenanceRequestStatus;
+import housingManagment.hms.enums.MaintenanceRequestType;
+import housingManagment.hms.enums.property.PropertyStatus;
 import housingManagment.hms.enums.property.RoomTypeDormitory;
-import housingManagment.hms.enums.userEnum.StudentRole;
-import housingManagment.hms.service.LeaseService;
-import housingManagment.hms.service.MaintenanceRequestService;
-import housingManagment.hms.service.property.DormitoryRoomService;
-import housingManagment.hms.service.userService.StudentService;
-import lombok.RequiredArgsConstructor;
+import housingManagment.hms.enums.userEnum.*;
+import housingManagment.hms.repository.*;
+import housingManagment.hms.repository.userRepository.*;
+import housingManagment.hms.repository.propertyRepository.*;
+import housingManagment.hms.service.*;
+import housingManagment.hms.service.property.*;
+import housingManagment.hms.service.userService.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.HashMap;
-
-import housingManagment.hms.dto.MaintenanceRequestDTO;
-import housingManagment.hms.entities.userEntity.BaseUser;
-import housingManagment.hms.repository.userRepository.UserRepository;
-import housingManagment.hms.enums.MaintenanceRequestType;
+import java.util.stream.Stream;
 
 @Controller
-@RequiredArgsConstructor
 public class DashboardController {
 
-    private final StudentService studentService;
-    private final DormitoryRoomService dormitoryRoomService;
     private final LeaseService leaseService;
+    private final StudentService studentService;
+    private final TeacherService teacherService;
     private final MaintenanceRequestService maintenanceRequestService;
+    private final DormitoryRoomService dormitoryRoomService;
     private final UserRepository userRepository;
+    private final TeacherRepository teacherRepository;
+    private final MaintenanceRepository maintenanceRepository;
+    private final HousingManagementRepository housingManagementRepository;
+    private final DepartmentOfStudentServicesRepository dssRepository;
+    private final PropertyRepository propertyRepository;
+    private final CottageService cottageService;
+    private final CampusApartmentService campusApartmentService;
+    private final OffCampusApartmentService offCampusApartmentService;
+    private final TownhouseService townhouseService;
+
+    @Autowired
+    public DashboardController(
+            LeaseService leaseService,
+            StudentService studentService,
+            TeacherService teacherService,
+            MaintenanceRequestService maintenanceRequestService,
+            DormitoryRoomService dormitoryRoomService,
+            UserRepository userRepository,
+            TeacherRepository teacherRepository,
+            MaintenanceRepository maintenanceRepository,
+            HousingManagementRepository housingManagementRepository,
+            DepartmentOfStudentServicesRepository dssRepository,
+            PropertyRepository propertyRepository,
+            CottageService cottageService,
+            CampusApartmentService campusApartmentService,
+            OffCampusApartmentService offCampusApartmentService,
+            TownhouseService townhouseService) {
+        this.leaseService = leaseService;
+        this.studentService = studentService;
+        this.teacherService = teacherService;
+        this.maintenanceRequestService = maintenanceRequestService;
+        this.dormitoryRoomService = dormitoryRoomService;
+        this.userRepository = userRepository;
+        this.teacherRepository = teacherRepository;
+        this.maintenanceRepository = maintenanceRepository;
+        this.housingManagementRepository = housingManagementRepository;
+        this.dssRepository = dssRepository;
+        this.propertyRepository = propertyRepository;
+        this.cottageService = cottageService;
+        this.campusApartmentService = campusApartmentService;
+        this.offCampusApartmentService = offCampusApartmentService;
+        this.townhouseService = townhouseService;
+    }
 
     @GetMapping("/")
     public String dashboard(Model model) {
@@ -285,7 +331,19 @@ public class DashboardController {
         model.addAttribute("student", student);
 
         // Get leases related to this student
-        model.addAttribute("leases", leaseService.getLeasesByTenant(id));
+        List<Lease> leases = leaseService.getLeasesByTenant(id);
+
+        // Ensure eager loading of properties to avoid LazyInitializationException in
+        // view
+        for (Lease lease : leases) {
+            if (lease.getProperty() != null) {
+                // Access property data to force initialization
+                lease.getProperty().getPropertyNumber();
+                lease.getProperty().getPropertyBlock();
+            }
+        }
+
+        model.addAttribute("leases", leases);
 
         return "students/view";
     }
@@ -319,9 +377,15 @@ public class DashboardController {
             try {
                 List<Lease> activeLeases = leaseService.getActiveLeasesByProperty(room.getId());
                 activeLeaseCountMap.put(room.getId(), activeLeases.size());
+
+                // Ensure the status is properly initialized
+                if (room.getStatus() == null) {
+                    room.setStatus(PropertyStatus.VACANT);
+                }
             } catch (Exception e) {
                 // Fallback if service throws exception
                 activeLeaseCountMap.put(room.getId(), 0);
+                System.err.println("Error getting active leases for room " + room.getId() + ": " + e.getMessage());
             }
         }
 
@@ -567,6 +631,9 @@ public class DashboardController {
                 .collect(Collectors.toList());
         model.addAttribute("availableStudents", availableStudents);
 
+        // Add maintenance request types to the model
+        model.addAttribute("maintenanceRequestTypes", MaintenanceRequestType.values());
+
         return "dormitory-rooms/view";
     }
 
@@ -639,6 +706,19 @@ public class DashboardController {
     @GetMapping("/leases/{id}")
     public String viewLease(@PathVariable UUID id, Model model) {
         Lease lease = leaseService.getLeaseById(id);
+
+        // Ensure property is initialized to avoid LazyInitializationException
+        if (lease.getProperty() != null) {
+            lease.getProperty().getPropertyNumber();
+            lease.getProperty().getPropertyBlock();
+        }
+
+        // Ensure tenant is initialized
+        if (lease.getTenant() != null) {
+            lease.getTenant().getFirstName();
+            lease.getTenant().getLastName();
+        }
+
         model.addAttribute("lease", lease);
         return "leases/view";
     }
@@ -800,5 +880,362 @@ public class DashboardController {
         model.addAttribute("propertyId", propertyId);
         model.addAttribute("propertyNumber", propertyNumber);
         return "maintenance-requests/view";
+    }
+
+    @GetMapping("/update-room-statuses")
+    public String updateAllRoomStatuses(Model model, RedirectAttributes redirectAttributes) {
+        List<DormitoryRoom> allRooms = dormitoryRoomService.getAllProperties();
+        int updatedCount = 0;
+
+        for (DormitoryRoom room : allRooms) {
+            // Skip rooms with special statuses
+            if (room.getStatus() == PropertyStatus.RESERVED ||
+                    room.getStatus() == PropertyStatus.OUT_OF_SERVICE) {
+                continue;
+            }
+
+            // Get active leases for this room
+            List<Lease> activeLeases = leaseService.getActiveLeasesByProperty(room.getId());
+            int activeLeaseCount = activeLeases.size();
+
+            // Calculate occupancy percentage
+            double occupancyPercentage = room.getMaxOccupant() > 0
+                    ? (double) activeLeaseCount / room.getMaxOccupant()
+                    : 0;
+
+            PropertyStatus newStatus;
+            // Determine the correct status based on occupancy
+            if (activeLeaseCount == 0) {
+                newStatus = PropertyStatus.VACANT;
+            } else if (occupancyPercentage >= 1.0) {
+                newStatus = PropertyStatus.OCCUPIED;
+            } else {
+                newStatus = PropertyStatus.PARTIALLY_OCCUPIED;
+            }
+
+            // Update only if status has changed
+            if (room.getStatus() != newStatus) {
+                room.setStatus(newStatus);
+                dormitoryRoomService.updateProperty(room.getId(), room);
+                updatedCount++;
+            }
+        }
+
+        redirectAttributes.addFlashAttribute("message",
+                String.format("Successfully updated %d room statuses", updatedCount));
+        return "redirect:/dormitory-rooms";
+    }
+
+    @GetMapping("/users")
+    public String listAllUsers(Model model,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String userType,
+            @RequestParam(required = false) String role,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        List<BaseUser> allUsers = new ArrayList<>();
+
+        // Fetch all user types based on the filter or all users if no filter
+        if (userType == null || userType.isEmpty() || userType.equals("all")) {
+            allUsers.addAll(userRepository.findAll());
+        } else {
+            switch (userType) {
+                case "student":
+                    allUsers.addAll(studentService.getAllUsers());
+                    break;
+                case "teacher":
+                    allUsers.addAll(teacherService.getAllUsers());
+                    break;
+                case "maintenance":
+                    allUsers.addAll(maintenanceRepository.findAll());
+                    break;
+                case "housing":
+                    allUsers.addAll(housingManagementRepository.findAll());
+                    break;
+                case "dss":
+                    allUsers.addAll(dssRepository.findAll());
+                    break;
+                default:
+                    allUsers.addAll(userRepository.findAll());
+            }
+        }
+
+        // Apply search filter if provided
+        if (search != null && !search.isEmpty()) {
+            String searchLower = search.toLowerCase();
+            allUsers = allUsers.stream()
+                    .filter(u -> (u.getFirstName() + " " + u.getLastName()).toLowerCase().contains(searchLower) ||
+                            (u.getEmail() != null && u.getEmail().toLowerCase().contains(searchLower)) ||
+                            (String.valueOf(u.getNuid())).contains(searchLower))
+                    .collect(Collectors.toList());
+        }
+
+        // Apply role filter if provided
+        if (role != null && !role.isEmpty()) {
+            allUsers = allUsers.stream()
+                    .filter(u -> {
+                        if (u instanceof Student) {
+                            return ((Student) u).getRole().name().equals(role);
+                        } else if (u instanceof Teacher) {
+                            return ((Teacher) u).getPosition().name().equals(role);
+                        } else if (u instanceof Maintenance) {
+                            return ((Maintenance) u).getRole().name().equals(role);
+                        } else if (u instanceof HousingManagement) {
+                            return ((HousingManagement) u).getRole().name().equals(role);
+                        } else if (u instanceof DSS) {
+                            return ((DSS) u).getRole().name().equals(role);
+                        }
+                        return false;
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Pagination logic
+        int totalItems = allUsers.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / size));
+        page = Math.max(0, Math.min(page, totalPages - 1));
+
+        // Extract current page items
+        List<BaseUser> pagedUsers;
+        if (totalItems > 0) {
+            int fromIndex = page * size;
+            int toIndex = Math.min(fromIndex + size, totalItems);
+            pagedUsers = allUsers.subList(fromIndex, toIndex);
+        } else {
+            pagedUsers = new ArrayList<>();
+        }
+
+        // Create maps for user type and role display names
+        Map<String, String> userTypeMap = new HashMap<>();
+        for (BaseUser user : pagedUsers) {
+            if (user instanceof Student) {
+                userTypeMap.put(user.getId().toString(), "Student");
+            } else if (user instanceof Teacher) {
+                userTypeMap.put(user.getId().toString(), "Teacher");
+            } else if (user instanceof Maintenance) {
+                userTypeMap.put(user.getId().toString(), "Maintenance");
+            } else if (user instanceof HousingManagement) {
+                userTypeMap.put(user.getId().toString(), "Housing Management");
+            } else if (user instanceof DSS) {
+                userTypeMap.put(user.getId().toString(), "DSS");
+            } else {
+                userTypeMap.put(user.getId().toString(), "Unknown");
+            }
+        }
+
+        // Add to the model
+        model.addAttribute("users", pagedUsers);
+        model.addAttribute("userTypeMap", userTypeMap);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalItems", totalItems);
+        model.addAttribute("availableSizes", List.of(10, 20, 30, 40));
+
+        // Add options for user type filter
+        model.addAttribute("userTypes", List.of(
+                Map.of("value", "all", "label", "All Users"),
+                Map.of("value", "student", "label", "Students"),
+                Map.of("value", "teacher", "label", "Teachers"),
+                Map.of("value", "maintenance", "label", "Maintenance Staff"),
+                Map.of("value", "housing", "label", "Housing Management"),
+                Map.of("value", "dss", "label", "DSS Staff")));
+
+        // Add roles based on selected user type
+        List<Map<String, String>> roles = new ArrayList<>();
+        roles.add(Map.of("value", "", "label", "All Roles"));
+
+        if (userType == null || userType.isEmpty() || userType.equals("all")) {
+            // Add some common roles for all user types
+        } else if (userType.equals("student")) {
+            for (StudentRole studentRole : StudentRole.values()) {
+                roles.add(Map.of("value", studentRole.name(), "label", formatEnumName(studentRole.name())));
+            }
+        } else if (userType.equals("teacher")) {
+            for (TeacherPosition position : TeacherPosition.values()) {
+                roles.add(Map.of("value", position.name(), "label", formatEnumName(position.name())));
+            }
+        } else if (userType.equals("maintenance")) {
+            for (MaintenanceRole maintenanceRole : MaintenanceRole.values()) {
+                roles.add(Map.of("value", maintenanceRole.name(), "label", formatEnumName(maintenanceRole.name())));
+            }
+        } else if (userType.equals("housing")) {
+            for (HousingManagementRole housingRole : HousingManagementRole.values()) {
+                roles.add(Map.of("value", housingRole.name(), "label", formatEnumName(housingRole.name())));
+            }
+        } else if (userType.equals("dss")) {
+            for (DepartmentOfStudentServicesRole dssRole : DepartmentOfStudentServicesRole.values()) {
+                roles.add(Map.of("value", dssRole.name(), "label", formatEnumName(dssRole.name())));
+            }
+        }
+
+        model.addAttribute("roles", roles);
+        model.addAttribute("selectedUserType", userType != null ? userType : "all");
+        model.addAttribute("selectedRole", role != null ? role : "");
+
+        return "users/list";
+    }
+
+    // Helper method to format enum names for display
+    private String formatEnumName(String enumName) {
+        // Convert ENUM_NAME to Enum Name
+        String result = enumName.replace("_", " ").toLowerCase();
+        // Capitalize first letter of each word using Pattern and Matcher
+        StringBuilder formatted = new StringBuilder(result.length());
+        boolean capitalizeNext = true;
+
+        for (char c : result.toCharArray()) {
+            if (Character.isWhitespace(c)) {
+                capitalizeNext = true;
+                formatted.append(c);
+            } else if (capitalizeNext) {
+                formatted.append(Character.toUpperCase(c));
+                capitalizeNext = false;
+            } else {
+                formatted.append(c);
+            }
+        }
+
+        return formatted.toString();
+    }
+
+    @GetMapping("/properties")
+    public String listAllProperties(Model model,
+            @RequestParam(required = false) String propertyType,
+            @RequestParam(required = false) PropertyStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        List<BaseProperty> allProperties = new ArrayList<>();
+
+        // Fetch all property types or specific type based on filter
+        if (propertyType == null || propertyType.isEmpty() || propertyType.equals("all")) {
+            allProperties.addAll(propertyRepository.findAll());
+        } else {
+            switch (propertyType) {
+                case "dormitory-room":
+                    allProperties.addAll(dormitoryRoomService.getAllProperties());
+                    break;
+                case "cottage":
+                    allProperties.addAll(cottageService.getAllProperties());
+                    break;
+                case "campus-apartment":
+                    allProperties.addAll(campusApartmentService.getAllProperties());
+                    break;
+                case "off-campus-apartment":
+                    allProperties.addAll(offCampusApartmentService.getAllProperties());
+                    break;
+                case "townhouse":
+                    allProperties.addAll(townhouseService.getAllProperties());
+                    break;
+                default:
+                    allProperties.addAll(propertyRepository.findAll());
+            }
+        }
+
+        // Apply status filter if provided
+        if (status != null) {
+            allProperties = allProperties.stream()
+                    .filter(property -> property.getStatus() == status)
+                    .collect(Collectors.toList());
+        }
+
+        // Pagination logic
+        int totalItems = allProperties.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / size));
+        page = Math.max(0, Math.min(page, totalPages - 1));
+
+        // Extract current page items
+        List<BaseProperty> pagedProperties;
+        if (totalItems > 0) {
+            int fromIndex = page * size;
+            int toIndex = Math.min(fromIndex + size, totalItems);
+            pagedProperties = allProperties.subList(fromIndex, toIndex);
+        } else {
+            pagedProperties = new ArrayList<>();
+        }
+
+        // Create maps for property type and details
+        Map<String, String> propertyTypeMap = new HashMap<>();
+        Map<String, Map<String, Object>> propertyDetailsMap = new HashMap<>();
+
+        for (BaseProperty property : pagedProperties) {
+            String propId = property.getId().toString();
+            Map<String, Object> details = new HashMap<>();
+
+            if (property instanceof DormitoryRoom) {
+                propertyTypeMap.put(propId, "Dormitory Room");
+                DormitoryRoom room = (DormitoryRoom) property;
+                details.put("roomType", room.getRoomType());
+            } else if (property instanceof Cottage) {
+                propertyTypeMap.put(propId, "Cottage");
+                Cottage cottage = (Cottage) property;
+            } else if (property instanceof CampusApartment) {
+                propertyTypeMap.put(propId, "Campus Apartment");
+                CampusApartment apartment = (CampusApartment) property;
+            } else if (property instanceof OffCampusApartment) {
+                propertyTypeMap.put(propId, "Off-campus Apartment");
+                OffCampusApartment apartment = (OffCampusApartment) property;
+                details.put("offCampusType", apartment.getOffCampusType());
+                details.put("address", apartment.getAddress());
+            } else if (property instanceof Townhouse) {
+                propertyTypeMap.put(propId, "Townhouse");
+                Townhouse townhouse = (Townhouse) property;
+            } else {
+                propertyTypeMap.put(propId, "Unknown");
+            }
+
+            // Add common details
+            details.put("maxOccupant", property.getMaxOccupant());
+            details.put("rent", property.getRent());
+            details.put("area", property.getArea());
+
+            // Get active lease count for occupancy display
+            try {
+                List<Lease> activeLeases = leaseService.getActiveLeasesByProperty(property.getId());
+                details.put("activeLeaseCount", activeLeases.size());
+                details.put("occupancyPercentage", property.getMaxOccupant() > 0
+                        ? (double) activeLeases.size() / property.getMaxOccupant()
+                        : 0);
+            } catch (Exception e) {
+                details.put("activeLeaseCount", 0);
+                details.put("occupancyPercentage", 0.0);
+            }
+
+            propertyDetailsMap.put(propId, details);
+        }
+
+        // Add to the model
+        model.addAttribute("properties", pagedProperties);
+        model.addAttribute("propertyTypeMap", propertyTypeMap);
+        model.addAttribute("propertyDetailsMap", propertyDetailsMap);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalItems", totalItems);
+        model.addAttribute("availableSizes", List.of(10, 20, 30, 40));
+
+        // Add options for property type filter
+        model.addAttribute("propertyTypes", List.of(
+                Map.of("value", "all", "label", "All Properties"),
+                Map.of("value", "dormitory-room", "label", "Dormitory Rooms"),
+                Map.of("value", "cottage", "label", "Cottages"),
+                Map.of("value", "campus-apartment", "label", "Campus Apartments"),
+                Map.of("value", "off-campus-apartment", "label", "Off-campus Apartments"),
+                Map.of("value", "townhouse", "label", "Townhouses")));
+
+        // Add all property statuses for filtering
+        List<Map<String, String>> statuses = new ArrayList<>();
+        statuses.add(Map.of("value", "", "label", "All Statuses"));
+        for (PropertyStatus propertyStatus : PropertyStatus.values()) {
+            statuses.add(Map.of("value", propertyStatus.name(), "label", formatEnumName(propertyStatus.name())));
+        }
+        model.addAttribute("statuses", statuses);
+
+        model.addAttribute("selectedPropertyType", propertyType != null ? propertyType : "all");
+        model.addAttribute("selectedStatus", status != null ? status.name() : "");
+
+        return "properties/list";
     }
 }
