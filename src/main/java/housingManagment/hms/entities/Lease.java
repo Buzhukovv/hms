@@ -50,7 +50,7 @@ public class Lease {
     @Column(nullable = false)
     private LocalDate checkInDate;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDate checkOutDate;
 
     private LocalDate terminationDate;
@@ -81,7 +81,8 @@ public class Lease {
 
     /**
      * Сумма депозита по договору аренды.
-     * Если недвижимость не является DormitoryRoom и значение не установлено, оно будет заполнено из property.depositAmount.
+     * Если недвижимость не является DormitoryRoom и значение не установлено, оно
+     * будет заполнено из property.depositAmount.
      */
     @Column(nullable = false)
     private Double deposit;

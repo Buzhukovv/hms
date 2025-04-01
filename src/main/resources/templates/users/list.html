@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <title>Users - HMS</title>
+</head>
+
+<body>
+    <!-- This page uses the main layout -->
+    <div th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+        <title>Users - HMS</title>
+
+        <section>
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Users</h2>
+                    <a href="/api/users" class="btn btn-outline-secondary" target="_blank">
+                        <i class="fas fa-code me-2"></i> API Endpoint
+                    </a>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" action="/users" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="search" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="search" name="search"
+                                    th:value="${param.search}" placeholder="Search by name, email or NUID">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="userType" class="form-label">User Type</label>
+                                <select class="form-select" id="userType" name="userType" onchange="this.form.submit()">
+                                    <option th:each="type : ${userTypes}" th:value="${type.value}"
+                                        th:text="${type.label}" th:selected="${type.value == selectedUserType}">All
+                                        Users</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="role" class="form-label">Role</label>
+                                <select class="form-select" id="role" name="role">
+                                    <option th:each="roleOption : ${roles}" th:value="${roleOption.value}"
+                                        th:text="${roleOption.label}" th:selected="${roleOption.value == selectedRole}">
+                                        All Roles</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Users List -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>NUID</th>
+                                        <th>User Type</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Role/Position</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="user : ${users}">
+                                        <td th:text="${user.nuid}">20233133</td>
+                                        <td>
+                                            <span class="badge"
+                                                th:classappend="
+                                                ${userTypeMap.get(user.id.toString()) == 'Student' ? 'text-bg-primary' : 
+                                                (userTypeMap.get(user.id.toString()) == 'Teacher' ? 'text-bg-success' : 
+                                                (userTypeMap.get(user.id.toString()) == 'Maintenance' ? 'text-bg-warning' : 
+                                                (userTypeMap.get(user.id.toString()) == 'Housing Management' ? 'text-bg-info' : 
+                                                (userTypeMap.get(user.id.toString()) == 'DSS' ? 'text-bg-secondary' : 'text-bg-dark'))))}">
+                                                <span th:text="${userTypeMap.get(user.id.toString())}">Student</span>
+                                            </span>
+                                        </td>
+                                        <td th:text="${user.firstName + ' ' + user.lastName}">John Doe</td>
+                                        <td th:text="${user.email}">john@example.com</td>
+                                        <td th:text="${user.localPhone}">+1234567890</td>
+                                        <td>
+                                            <span
+                                                th:if="${user instanceof T(housingManagment.hms.entities.userEntity.Student)}"
+                                                th:text="${user.role}">BACHELOR_DEGREE_3_Y</span>
+                                            <span
+                                                th:if="${user instanceof T(housingManagment.hms.entities.userEntity.Teacher)}"
+                                                th:text="${user.position}">ASSOCIATE_PROFESSOR</span>
+                                            <span
+                                                th:if="${user instanceof T(housingManagment.hms.entities.userEntity.Maintenance)}"
+                                                th:text="${user.role}">MAINTENANCE_STAFF</span>
+                                            <span
+                                                th:if="${user instanceof T(housingManagment.hms.entities.userEntity.HousingManagement)}"
+                                                th:text="${user.role}">MANAGER</span>
+                                            <span
+                                                th:if="${user instanceof T(housingManagment.hms.entities.userEntity.DSS)}"
+                                                th:text="${user.role}">DSS_MANAGER</span>
+                                        </td>
+                                        <td>
+                                            <a th:href="@{/{userType}/{id}(userType=${userTypeMap.get(user.id.toString()).toLowerCase().replace(' ', '-')}, id=${user.id})}"
+                                                class="btn btn-sm btn-primary me-1">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/{userType}/{id}/edit(userType=${userTypeMap.get(user.id.toString()).toLowerCase().replace(' ', '-')}, id=${user.id})}"
+                                                class="btn btn-sm btn-warning me-1">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a th:href="@{/api/{userType}/{id}(userType=${userTypeMap.get(user.id.toString()).toLowerCase().replace(' ', '-')}, id=${user.id})}"
+                                                target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-code"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${users.empty}">
+                                        <td colspan="7" class="text-center">No users found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="card mt-3">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            Showing
+                            <span
+                                th:text="${totalItems > 0 ? (currentPage * pageSize + 1) + '-' + (currentPage * pageSize + users.size()) : 0}">1-10</span>
+                            of <span th:text="${totalItems}">100</span> items
+                        </div>
+
+                        <div class="d-flex align-items-center">
+                            <span class="me-3">Page Size:</span>
+                            <div class="btn-group me-3">
+                                <button th:each="size : ${availableSizes}" th:text="${size}"
+                                    th:class="${size == pageSize ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-primary'}"
+                                    th:onclick="'changePageSize(' + ${size} + ')'">
+                                </button>
+                            </div>
+
+                            <nav aria-label="Page navigation" th:if="${totalPages > 1}">
+                                <ul class="pagination mb-0">
+                                    <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                                        <a class="page-link"
+                                            th:href="@{/users(page=${currentPage - 1}, size=${pageSize}, search=${param.search}, userType=${param.userType}, role=${param.role})}"
+                                            aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Show limited page numbers around current page -->
+                                    <li class="page-item" th:if="${currentPage > 2 && totalPages > 1}">
+                                        <a class="page-link"
+                                            th:href="@{/users(page=0, size=${pageSize}, search=${param.search}, userType=${param.userType}, role=${param.role})}">1</a>
+                                    </li>
+                                    <li class="page-item disabled" th:if="${currentPage > 3 && totalPages > 1}">
+                                        <span class="page-link">...</span>
+                                    </li>
+
+                                    <li class="page-item" th:if="${totalPages > 0}" th:each="i : ${#numbers.sequence(
+                                            T(java.lang.Math).max(0, currentPage - 2), 
+                                            T(java.lang.Math).min(currentPage + 2, totalPages > 0 ? totalPages - 1 : 0)
+                                        )}" th:classappend="${i == currentPage ? 'active' : ''}">
+                                        <a class="page-link"
+                                            th:href="@{/users(page=${i}, size=${pageSize}, search=${param.search}, userType=${param.userType}, role=${param.role})}"
+                                            th:text="${i + 1}">1</a>
+                                    </li>
+
+                                    <li class="page-item disabled"
+                                        th:if="${currentPage < totalPages - 4 && totalPages > 1}">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                    <li class="page-item" th:if="${currentPage < totalPages - 3 && totalPages > 1}">
+                                        <a class="page-link"
+                                            th:href="@{/users(page=${totalPages - 1}, size=${pageSize}, search=${param.search}, userType=${param.userType}, role=${param.role})}"
+                                            th:text="${totalPages}">Last</a>
+                                    </li>
+
+                                    <li class="page-item"
+                                        th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                                        <a class="page-link"
+                                            th:href="@{/users(page=${currentPage + 1}, size=${pageSize}, search=${param.search}, userType=${param.userType}, role=${param.role})}"
+                                            aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JavaScript for handling page size changes -->
+                <script th:inline="javascript">
+                    function changePageSize(size) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        urlParams.set('size', size);
+                        urlParams.set('page', 0); // Reset to first page when changing size
+                        window.location.href = window.location.pathname + '?' + urlParams.toString();
+                    }
+                </script>
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>

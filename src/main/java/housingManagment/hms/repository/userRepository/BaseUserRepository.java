@@ -29,4 +29,13 @@ public interface BaseUserRepository<T extends BaseUser> extends JpaRepository<T,
                         "FROM #{#entityName} u " +
                         "GROUP BY TYPE(u)")
         Map<String, Object> countAllTenantTypes();
+
+        /**
+         * Update a user's password by ID
+         * 
+         * @param id       the user's ID
+         * @param password the new encoded password
+         */
+        @Query("UPDATE #{#entityName} u SET u.password = :password WHERE u.id = :id")
+        void updatePassword(@Param("id") UUID id, @Param("password") String password);
 }

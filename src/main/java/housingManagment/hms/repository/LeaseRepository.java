@@ -4,6 +4,8 @@ import housingManagment.hms.entities.Lease;
 import housingManagment.hms.entities.property.BaseProperty;
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.enums.LeaseStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -221,4 +223,17 @@ public interface LeaseRepository extends JpaRepository<Lease, UUID> {
 
         @Query("SELECT DISTINCT l.property FROM Lease l WHERE l.property.id = :propertyId")
         Optional<BaseProperty> findPropertyByLeasePropertyId(@Param("propertyId") UUID propertyId);
+
+        // Pagination methods
+        Page<Lease> findByStatus(LeaseStatus status, Pageable pageable);
+
+        Page<Lease> findByLeaseNumberContainingOrContractNumberContaining(
+                        String leaseNumber, String contractNumber, Pageable pageable);
+
+        @Query("SELECT l FROM Lease l WHERE l.status = :status AND (l.leaseNumber LIKE %:searchTerm% OR l.contractNumber LIKE %:searchTerm%)")
+        Page<Lease> findByStatusAndLeaseNumberContainingOrContractNumberContaining(
+                        @Param("status") LeaseStatus status,
+                        @Param("searchTerm") String leaseNumberTerm,
+                        @Param("searchTerm") String contractNumberTerm,
+                        Pageable pageable);
 }

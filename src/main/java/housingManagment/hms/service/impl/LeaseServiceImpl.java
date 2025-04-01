@@ -17,6 +17,9 @@ import housingManagment.hms.repository.userRepository.UserRepository;
 import housingManagment.hms.repository.userRepository.FamilyMemberRepository;
 import housingManagment.hms.service.LeaseService;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.Cacheable;
@@ -340,26 +343,61 @@ public class LeaseServiceImpl implements LeaseService {
     @Override
     @Transactional(readOnly = true)
     public Lease getLeaseById(UUID id) {
-        return leaseRepository.findByIdWithDetails(id)
+        Lease lease = leaseRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lease not found with id: " + id));
+
+        // Initialize tenant and property to prevent LazyInitializationException
+        if (lease.getTenant() != null) {
+            Hibernate.initialize(lease.getTenant());
+        }
+        if (lease.getProperty() != null) {
+            Hibernate.initialize(lease.getProperty());
+        }
+
+        return lease;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Lease> getAllLeases() {
+        List<Lease> leases;
         try {
-            return leaseRepository.findAllWithDetails();
+            leases = leaseRepository.findAllWithDetails();
         } catch (Exception e) {
             // Fallback to regular findAll if the join fetch query fails
-            return leaseRepository.findAll();
+            leases = leaseRepository.findAll();
         }
+
+        // Initialize tenant and property for each lease
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
     }
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "leaseQueries", key = "'property_' + #propertyId")
     public List<Lease> getLeasesByProperty(UUID propertyId) {
-        return leaseRepository.findByPropertyId(propertyId);
+        List<Lease> leases = leaseRepository.findByPropertyId(propertyId);
+
+        // Initialize tenant for each lease to prevent LazyInitializationException
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
     }
 
     /**
@@ -369,30 +407,79 @@ public class LeaseServiceImpl implements LeaseService {
     @Transactional(readOnly = true)
     @Cacheable(value = "leaseQueries", key = "'active_property_' + #propertyId")
     public List<Lease> getActiveLeasesByProperty(UUID propertyId) {
-        return leaseRepository.findActiveLeasesByPropertyId(propertyId);
+        List<Lease> leases = leaseRepository.findActiveLeasesByPropertyId(propertyId);
+
+        // Initialize tenant for each lease to prevent LazyInitializationException
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Lease> getLeasesByTenant(UUID tenantId) {
-        return leaseRepository.findByTenantId(tenantId);
+        List<Lease> leases = leaseRepository.findByTenantId(tenantId);
+
+        // Initialize property for each lease to prevent LazyInitializationException
+        for (Lease lease : leases) {
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+        }
+
+        return leases;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Lease> getLeasesByStatus(LeaseStatus status) {
+        List<Lease> leases;
         try {
-            return leaseRepository.findByStatusWithDetails(status);
+            leases = leaseRepository.findByStatusWithDetails(status);
         } catch (Exception e) {
             // Fallback to regular findByStatus if the join fetch query fails
-            return leaseRepository.findByStatus(status);
+            leases = leaseRepository.findByStatus(status);
         }
+
+        // Initialize tenant and property for each lease
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Lease> getActiveLeases() {
-        return leaseRepository.findByStatus(LeaseStatus.ACTIVE);
+        List<Lease> leases = leaseRepository.findByStatus(LeaseStatus.ACTIVE);
+
+        // Initialize tenant and property for each lease
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
     }
 
     @Override
@@ -400,7 +487,19 @@ public class LeaseServiceImpl implements LeaseService {
     public List<Lease> getExpiringLeases() {
         LocalDate today = LocalDate.now();
         LocalDate thirtyDaysFromNow = today.plusDays(30);
-        return leaseRepository.findLeasesExpiringBetween(today, thirtyDaysFromNow);
+        List<Lease> leases = leaseRepository.findLeasesExpiringBetween(today, thirtyDaysFromNow);
+
+        // Initialize tenant and property for each lease
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
     }
 
     @Override
@@ -431,7 +530,19 @@ public class LeaseServiceImpl implements LeaseService {
     @Transactional(readOnly = true)
     public List<Lease> searchLeases(String keyword) {
         // Implement search functionality based on lease number or other relevant fields
-        return leaseRepository.findByLeaseNumberContainingIgnoreCase(keyword);
+        List<Lease> leases = leaseRepository.findByLeaseNumberContainingIgnoreCase(keyword);
+
+        // Initialize tenant and property for each lease
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
     }
 
     /**
@@ -476,6 +587,36 @@ public class LeaseServiceImpl implements LeaseService {
         } catch (Exception e) {
             System.err.println("Error synchronizing property statuses: " + e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Lease> getLeasesPaginated(Pageable pageable, LeaseStatus status, String searchTerm) {
+        Page<Lease> leases;
+
+        if (status != null && searchTerm != null && !searchTerm.trim().isEmpty()) {
+            // Filter by both status and search term
+            leases = leaseRepository.findByStatusAndLeaseNumberContainingOrContractNumberContaining(
+                    status, searchTerm, searchTerm, pageable);
+        } else if (status != null) {
+            // Filter by status only
+            leases = leaseRepository.findByStatus(status, pageable);
+        } else if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            // Filter by search term only
+            leases = leaseRepository.findByLeaseNumberContainingOrContractNumberContaining(
+                    searchTerm, searchTerm, pageable);
+        } else {
+            // No filters
+            leases = leaseRepository.findAll(pageable);
+        }
+
+        // Initialize associations to prevent LazyInitializationException
+        leases.forEach(lease -> {
+            Hibernate.initialize(lease.getTenant());
+            Hibernate.initialize(lease.getProperty());
+        });
+
+        return leases;
     }
 
 }

@@ -6,6 +6,7 @@ import housingManagment.hms.entities.userEntity.HousingManagement;
 import housingManagment.hms.entities.userEntity.Maintenance;
 import housingManagment.hms.entities.userEntity.Student;
 import housingManagment.hms.entities.userEntity.Teacher;
+import housingManagment.hms.enums.userEnum.schools.SchoolsAndSpecialties;
 import housingManagment.hms.repository.userRepository.DepartmentOfStudentServicesRepository;
 import housingManagment.hms.repository.userRepository.HousingManagementRepository;
 import housingManagment.hms.repository.userRepository.MaintenanceRepository;
@@ -104,7 +105,7 @@ public class AuthController {
             @RequestParam("lastName") String lastName,
             @RequestParam("email") String email,
             @RequestParam("localPhone") String localPhone,
-            @RequestParam(value = "school", required = false) String school,
+            @RequestParam(value = "school", required = false) SchoolsAndSpecialties school,
             @RequestParam(value = "specialty", required = false) String specialty,
             RedirectAttributes redirectAttributes) {
 

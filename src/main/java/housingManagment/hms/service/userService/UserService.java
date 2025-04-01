@@ -1,8 +1,12 @@
 package housingManagment.hms.service.userService;
 
+import housingManagment.hms.dto.UserListDTO;
 import housingManagment.hms.entities.userEntity.BaseUser;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -58,4 +62,24 @@ public interface UserService {
      * @return a list of matching users
      */
     List<BaseUser> searchUsersByNameOrLastName(String keyword);
+
+    // New methods for unified view
+    Page<UserListDTO> getAllUsersFiltered(
+            String userType,
+            String role,
+            String school,
+            String searchTerm,
+            String sortBy,
+            String sortDirection,
+            Pageable pageable);
+
+    List<String> getAllUserTypes();
+
+    Map<String, List<String>> getRolesByUserType(String userType);
+
+    List<String> getAllSchools();
+
+    Map<String, Object> getUserStatistics();
+
+    void exportUsers(String userType, String role, String school, String searchTerm);
 }

@@ -249,6 +249,12 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long count() {
+        return maintenanceRequestRepository.count();
+    }
+
     /**
      * Helper method to convert MaintenanceRequest entity to DTO
      */

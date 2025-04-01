@@ -25,5 +25,6 @@ CREATE INDEX IF NOT EXISTS idx_property_base_status ON property_base(status);
 
 -- User indexes
 CREATE INDEX IF NOT EXISTS idx_user_base_email ON user_base(email);
-CREATE INDEX IF NOT EXISTS idx_user_base_role ON user_base(role);
+-- Role is in the subclass tables, not in the base table
+-- CREATE INDEX IF NOT EXISTS idx_user_base_role ON user_base(role);
 CREATE INDEX IF NOT EXISTS idx_user_base_last_name ON user_base(last_name); 

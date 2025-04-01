@@ -1,24 +1,31 @@
 package housingManagment.hms.entities.userEntity;
 
 import housingManagment.hms.enums.userEnum.Gender;
+import housingManagment.hms.enums.userEnum.TeacherPosition;
+import housingManagment.hms.enums.userEnum.schools.SchoolsAndSpecialties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+/**
+ * Represents a teacher user in the housing management system.
+ */
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "user_teachers")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@DiscriminatorValue("TEACHER")
 public class Teacher extends BaseUser {
-    
-    @Column(nullable = false)
-    private String school;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Gender gender;
+    private TeacherPosition position;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SchoolsAndSpecialties school;
 }
