@@ -1,0 +1,57 @@
+spring:
+  # Disable test data loading for production
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 30000
+      connection-timeout: 20000
+    url: jdbc:postgresql://13.48.128.129:5432/hms_db
+    username: hms_user
+    password: hms_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: true
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+        # Disable second-level cache to save memory
+        cache:
+          use_second_level_cache: false
+        # Reduce query plan cache size
+        query:
+          plan_cache_max_size: 64
+          plan_parameter_metadata_max_size: 32
+        hibernate:
+          ddl-auto: update
+    show-sql: false
+  # Restrict file upload size
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+  # Reduce Tomcat memory usage
+  server:
+    tomcat:
+      max-threads: 50
+      min-spare-threads: 5
+      max-connections: 200
+      accept-count: 100
+    port: 8080
+  thymeleaf:
+    cache: true
+
+# Disable API documentation in production
+springdoc:
+  api-docs:
+    enabled: true
+
+logging:
+  level:
+    root: INFO
+    housingManagment.hms: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

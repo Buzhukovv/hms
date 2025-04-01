@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <title>Dashboard</title>
+    <style>
+        .dashboard-stats-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .dashboard-stats-card .icon {
+            font-size: 3rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .dashboard-stats-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .dashboard-stats-card .stat-label {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+
+        .dashboard-stats-card .stat-meta {
+            font-size: 0.8rem;
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .dashboard-stats-card .stat-badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .dashboard-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            border: none;
+            overflow: hidden;
+        }
+
+        .dashboard-card .card-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            background-color: #fff;
+            padding: 15px 20px;
+        }
+
+        .dashboard-card .card-body {
+            padding: 20px;
+        }
+
+        .dashboard-table {
+            margin-bottom: 0;
+        }
+
+        .dashboard-table th {
+            font-weight: 600;
+            color: #495057;
+            border-top: none;
+        }
+
+        .dashboard-table td {
+            vertical-align: middle;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        /* Custom colors for stats cards */
+        .bg-students {
+            background: linear-gradient(135deg, #4e73df 0%, #2e59d9 100%);
+            color: white;
+        }
+
+        .bg-rooms {
+            background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+            color: white;
+        }
+
+        .bg-leases {
+            background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+            color: white;
+        }
+
+        .bg-maintenance {
+            background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- This page uses the main layout -->
+    <div th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+        <title>Dashboard - HMS</title>
+
+        <section>
+            <div class="container-fluid px-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>HMS Dashboard</h2>
+                    <div>
+                        <span class="text-muted"
+                            th:text="${#dates.format(#dates.createNow(), 'EEEE, MMMM d, yyyy')}">Today's Date</span>
+                    </div>
+                </div>
+
+                <!-- Error message if present -->
+                <div class="col-12 mb-4" th:if="${error != null}">
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <div th:text="${error}">Error loading dashboard data</div>
+                    </div>
+                </div>
+
+                <!-- Stats cards -->
+                <div class="row mb-4">
+                    <div class="col-md-6 col-xl-3">
+                        <div class="dashboard-stats-card bg-students">
+                            <i class="fa fa-users icon"></i>
+                            <div class="stat-value" th:text="${studentCount}">0</div>
+                            <div class="stat-label">Students</div>
+                            <div class="stat-meta">
+                                <span>Student Overview</span>
+                                <a href="/students" class="text-white text-decoration-none">
+                                    <small>View All <i class="fas fa-arrow-right"></i></small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="dashboard-stats-card bg-rooms">
+                            <i class="fa fa-building icon"></i>
+                            <div class="stat-value" th:text="${roomCount}">0</div>
+                            <div class="stat-label">Dormitory Rooms</div>
+                            <div class="stat-meta">
+                                <span>
+                                    <span class="stat-badge bg-light text-dark" th:text="${vacantRooms + ' Vacant'}">0
+                                        Vacant</span>
+                                </span>
+                                <a href="/dormitory-rooms" class="text-white text-decoration-none">
+                                    <small>View All <i class="fas fa-arrow-right"></i></small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="dashboard-stats-card bg-leases">
+                            <i class="fa fa-file-contract icon"></i>
+                            <div class="stat-value" th:text="${leaseCount}">0</div>
+                            <div class="stat-label">Active Leases</div>
+                            <div class="stat-meta">
+                                <span th:if="${roomCount > 0}"
+                                    th:text="${'Occupancy: ' + #numbers.formatDecimal(occupiedRooms * 100 / roomCount, 1, 1) + '%'}">0%</span>
+                                <a href="/leases" class="text-white text-decoration-none">
+                                    <small>View All <i class="fas fa-arrow-right"></i></small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="dashboard-stats-card bg-maintenance">
+                            <i class="fa fa-tools icon"></i>
+                            <div class="stat-value" th:text="${maintenanceRequestCount}">0</div>
+                            <div class="stat-label">Maintenance Requests</div>
+                            <div class="stat-meta" th:if="${!maintenanceStatusCounts.isEmpty()}">
+                                <span
+                                    th:with="pendingCount=${maintenanceStatusCounts.get('PENDING') != null ? maintenanceStatusCounts.get('PENDING') : 0}">
+                                    <span class="stat-badge bg-light text-dark" th:text="${pendingCount + ' Pending'}">0
+                                        Pending</span>
+                                </span>
+                                <a href="/maintenance-requests" class="text-white text-decoration-none">
+                                    <small>View All <i class="fas fa-arrow-right"></i></small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Entity Metrics -->
+                <div class="row mb-4">
+                    <!-- Left Column -->
+                    <div class="col-lg-8">
+                        <!-- Room Status -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="dashboard-card h-100">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">Room Availability</h5>
+                                        <a href="/dormitory-rooms/visual" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-th"></i> Visual View
+                                        </a>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="roomStatusChart" th:data-vacant="${vacantRooms}"
+                                                th:data-partially-occupied="${partiallyOccupiedRooms}"
+                                                th:data-occupied="${occupiedRooms}"
+                                                th:data-maintenance="${maintenanceRooms}"
+                                                th:data-reserved="${reservedRooms}">
+                                            </canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="dashboard-card h-100">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Room Occupancy Status</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm dashboard-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Status</th>
+                                                        <th class="text-end">Count</th>
+                                                        <th class="text-end">Percentage</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody th:with="total=${roomCount}">
+                                                    <tr>
+                                                        <td>
+                                                            <span class="badge bg-success">Vacant</span>
+                                                        </td>
+                                                        <td class="text-end" th:text="${vacantRooms}">0</td>
+                                                        <td class="text-end">
+                                                            <span th:if="${total > 0}"
+                                                                th:text="${#numbers.formatDecimal(vacantRooms * 100 / total, 1, 1) + '%'}">0%</span>
+                                                            <span th:unless="${total > 0}">0%</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <span class="badge bg-warning">Partially Occupied</span>
+                                                        </td>
+                                                        <td class="text-end" th:text="${partiallyOccupiedRooms}">0</td>
+                                                        <td class="text-end">
+                                                            <span th:if="${total > 0}"
+                                                                th:text="${#numbers.formatDecimal(partiallyOccupiedRooms * 100 / total, 1, 1) + '%'}">0%</span>
+                                                            <span th:unless="${total > 0}">0%</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <span class="badge bg-danger">Occupied</span>
+                                                        </td>
+                                                        <td class="text-end" th:text="${occupiedRooms}">0</td>
+                                                        <td class="text-end">
+                                                            <span th:if="${total > 0}"
+                                                                th:text="${#numbers.formatDecimal(occupiedRooms * 100 / total, 1, 1) + '%'}">0%</span>
+                                                            <span th:unless="${total > 0}">0%</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <span class="badge bg-secondary">Out of Service</span>
+                                                        </td>
+                                                        <td class="text-end" th:text="${maintenanceRooms}">0</td>
+                                                        <td class="text-end">
+                                                            <span th:if="${total > 0}"
+                                                                th:text="${#numbers.formatDecimal(maintenanceRooms * 100 / total, 1, 1) + '%'}">0%</span>
+                                                            <span th:unless="${total > 0}">0%</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <span class="badge bg-info">Reserved</span>
+                                                        </td>
+                                                        <td class="text-end" th:text="${reservedRooms}">0</td>
+                                                        <td class="text-end">
+                                                            <span th:if="${total > 0}"
+                                                                th:text="${#numbers.formatDecimal(reservedRooms * 100 / total, 1, 1) + '%'}">0%</span>
+                                                            <span th:unless="${total > 0}">0%</span>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Maintenance Requests -->
+                        <div class="dashboard-card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Recent Maintenance Requests</h5>
+                                <a href="/maintenance-requests" class="btn btn-sm btn-outline-primary">
+                                    View All
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover dashboard-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Request #</th>
+                                                <th>Title</th>
+                                                <th>Status</th>
+                                                <th>Created</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:if="${recentRequests != null && !recentRequests.empty}"
+                                                th:each="request : ${recentRequests}">
+                                                <td th:text="${request.requestNumber}">MR-12345</td>
+                                                <td th:text="${request.title}">Fix Broken Window</td>
+                                                <td>
+                                                    <span
+                                                        th:if="${request.status != null && request.status.name() == 'PENDING'}"
+                                                        class="status-badge bg-warning text-dark">Pending</span>
+                                                    <span
+                                                        th:if="${request.status != null && request.status.name() == 'IN_PROGRESS'}"
+                                                        class="status-badge bg-info text-white">In Progress</span>
+                                                    <span
+                                                        th:if="${request.status != null && request.status.name() == 'COMPLETED'}"
+                                                        class="status-badge bg-success text-white">Completed</span>
+                                                    <span
+                                                        th:if="${request.status != null && request.status.name() == 'CANCELLED'}"
+                                                        class="status-badge bg-secondary text-white">Cancelled</span>
+                                                    <span
+                                                        th:if="${request.status != null && request.status.name() == 'APPROVED'}"
+                                                        class="status-badge bg-primary text-white">Approved</span>
+                                                    <span
+                                                        th:if="${request.status != null && request.status.name() == 'PAID'}"
+                                                        class="status-badge bg-success text-white">Paid</span>
+                                                    <span
+                                                        th:if="${request.status != null && request.status.name() == 'REJECTED'}"
+                                                        class="status-badge bg-danger text-white">Rejected</span>
+                                                </td>
+                                                <td
+                                                    th:text="${request.createdAt != null ? #temporals.format(request.createdAt, 'MMM dd, yyyy') : 'Unknown'}">
+                                                    Jan 1, 2023</td>
+                                                <td>
+                                                    <a th:if="${request.id != null}"
+                                                        th:href="@{/maintenance-requests/{id}(id=${request.id})}"
+                                                        class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            <tr th:if="${recentRequests == null || recentRequests.empty}">
+                                                <td colspan="5" class="text-center">No maintenance requests found</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-lg-4">
+                        <!-- User Breakdown -->
+                        <div class="dashboard-card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Students by Type</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm dashboard-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th class="text-end">Count</th>
+                                                <th class="text-end">%</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:if="${userTypeCounts.isEmpty()}">
+                                                <td colspan="3" class="text-center">No data available</td>
+                                            </tr>
+                                            <tr th:each="entry : ${userTypeCounts}" th:with="total=${studentCount}">
+                                                <td>
+                                                    <span
+                                                        th:text="${entry.key.startsWith('STUDENT_') ? entry.key.substring(8).replace('_', ' ') : entry.key.replace('_', ' ')}">Student
+                                                        Type</span>
+                                                </td>
+                                                <td class="text-end" th:text="${entry.value}">0</td>
+                                                <td class="text-end">
+                                                    <span th:if="${total > 0}"
+                                                        th:text="${#numbers.formatDecimal(entry.value * 100 / total, 1, 1) + '%'}">0%</span>
+                                                    <span th:unless="${total > 0}">0%</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Room Type Breakdown -->
+                        <div class="dashboard-card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Rooms by Type</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm dashboard-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th class="text-end">Count</th>
+                                                <th class="text-end">%</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:if="${roomTypeCounts.isEmpty()}">
+                                                <td colspan="3" class="text-center">No data available</td>
+                                            </tr>
+                                            <tr th:each="entry : ${roomTypeCounts}" th:with="total=${roomCount}">
+                                                <td>
+                                                    <span th:text="${entry.key.replace('_', ' ')}">Room Type</span>
+                                                </td>
+                                                <td class="text-end" th:text="${entry.value}">0</td>
+                                                <td class="text-end">
+                                                    <span th:if="${total > 0}"
+                                                        th:text="${#numbers.formatDecimal(entry.value * 100 / total, 1, 1) + '%'}">0%</span>
+                                                    <span th:unless="${total > 0}">0%</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Maintenance Status Breakdown -->
+                        <div class="dashboard-card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Maintenance by Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm dashboard-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Status</th>
+                                                <th class="text-end">Count</th>
+                                                <th class="text-end">%</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:if="${maintenanceStatusCounts.isEmpty()}">
+                                                <td colspan="3" class="text-center">No data available</td>
+                                            </tr>
+                                            <tr th:each="entry : ${maintenanceStatusCounts}"
+                                                th:with="total=${maintenanceRequestCount}">
+                                                <td>
+                                                    <span th:class="${
+                                                        entry.key == 'PENDING' ? 'status-badge bg-warning text-dark' :
+                                                        entry.key == 'APPROVED' ? 'status-badge bg-info text-white' :
+                                                        entry.key == 'PAID' ? 'status-badge bg-primary text-white' :
+                                                        entry.key == 'IN_PROGRESS' ? 'status-badge bg-info text-white' :
+                                                        entry.key == 'COMPLETED' ? 'status-badge bg-success text-white' :
+                                                        entry.key == 'CANCELLED' ? 'status-badge bg-secondary text-white' :
+                                                        entry.key == 'REJECTED' ? 'status-badge bg-danger text-white' :
+                                                        ''
+                                                    }" th:text="${entry.key}">Status</span>
+                                                </td>
+                                                <td class="text-end" th:text="${entry.value}">0</td>
+                                                <td class="text-end">
+                                                    <span th:if="${total > 0}"
+                                                        th:text="${#numbers.formatDecimal(entry.value * 100 / total, 1, 1) + '%'}">0%</span>
+                                                    <span th:unless="${total > 0}">0%</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Latest Students -->
+                        <div class="dashboard-card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Latest Students</h5>
+                                <a href="/students" class="btn btn-sm btn-outline-primary">
+                                    View All
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <div th:if="${latestStudents != null && !latestStudents.empty}"
+                                        th:each="student : ${latestStudents}"
+                                        class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                        <div>
+                                            <div class="fw-bold"
+                                                th:text="${student != null && student.firstName != null && student.lastName != null ? student.firstName + ' ' + student.lastName : 'Name Not Available'}">
+                                                John Doe</div>
+                                            <small class="text-muted"
+                                                th:text="${student != null && student.email != null ? student.email : 'No Email'}">john@example.com</small>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-primary rounded-pill"
+                                                th:text="${student != null && student.role != null ? student.role : 'Unknown'}">BACHELOR</span>
+                                            <a th:if="${student != null && student.id != null}"
+                                                th:href="@{/students/{id}(id=${student.id})}"
+                                                class="btn btn-sm btn-link text-primary ms-2">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div th:if="${latestStudents == null || latestStudents.empty}"
+                                        class="list-group-item text-center">
+                                        No students found
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            // Room Status Chart
+            var chartEl = document.getElementById('roomStatusChart');
+            var roomStatusCtx = chartEl.getContext('2d');
+            var vacantRooms = parseInt(chartEl.getAttribute('data-vacant') || 0);
+            var partiallyOccupiedRooms = parseInt(chartEl.getAttribute('data-partially-occupied') || 0);
+            var occupiedRooms = parseInt(chartEl.getAttribute('data-occupied') || 0);
+            var maintenanceRooms = parseInt(chartEl.getAttribute('data-maintenance') || 0);
+            var reservedRooms = parseInt(chartEl.getAttribute('data-reserved') || 0);
+
+            var roomStatusChart = new Chart(roomStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Vacant', 'Partially Occupied', 'Occupied', 'Out of Service', 'Reserved'],
+                    datasets: [{
+                        data: [vacantRooms, partiallyOccupiedRooms, occupiedRooms, maintenanceRooms, reservedRooms],
+                        backgroundColor: [
+                            '#28a745', // green - vacant
+                            '#ffc107', // yellow - partially occupied
+                            '#dc3545', // red - occupied
+                            '#6c757d', // gray - out of service
+                            '#17a2b8'  // blue - reserved
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

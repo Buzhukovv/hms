@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <title>Student Details - HMS</title>
+</head>
+
+<body>
+    <!-- This page uses the main layout -->
+    <div th:replace="~{layout/main :: layout(~{::title}, ~{::section})}">
+        <title>Student Details - HMS</title>
+
+        <section>
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 th:text="${student.firstName + ' ' + student.lastName}">John Doe</h2>
+                    <div>
+                        <a href="/students" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left me-2"></i> Back to List
+                        </a>
+                        <a th:href="@{/api/students/{id}(id=${student.id})}" class="btn btn-outline-secondary"
+                            target="_blank">
+                            <i class="fas fa-code me-2"></i> API Endpoint
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Personal Information -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Personal Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table">
+                                    <tr>
+                                        <th style="width: 30%">Name</th>
+                                        <td th:text="${student.firstName + ' ' + student.lastName}">John Doe</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email</th>
+                                        <td th:text="${student.email}">john@example.com</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Phone</th>
+                                        <td th:text="${student.localPhone}">+1234567890</td>
+                                    </tr>
+                                    <tr>
+                                        <th>National ID</th>
+                                        <td th:text="${student.nationalId}">123456789</td>
+                                    </tr>
+                                    <tr>
+                                        <th>University ID</th>
+                                        <td th:text="${student.nuid}">U12345</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Gender</th>
+                                        <td th:text="${student.gender}">MALE</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Academic Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table">
+                                    <tr>
+                                        <th style="width: 30%">Role</th>
+                                        <td th:text="${student.role}">BACHELOR_DEGREE_3_Y</td>
+                                    </tr>
+                                    <tr>
+                                        <th>School</th>
+                                        <td th:text="${student.school}">School of Engineering</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Specialty</th>
+                                        <td th:text="${student.specialty}">Computer Science</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Housing Information -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Housing Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div th:if="${leases.empty}" class="alert alert-info">
+                                    This student doesn't have any active leases.
+                                </div>
+
+                                <div th:each="lease : ${leases}" class="mb-4">
+                                    <h6 th:text="${'Lease #' + lease.leaseNumber}">Lease #L1234567</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th style="width: 30%">Property</th>
+                                            <td>
+                                                <a th:if="${lease.property}"
+                                                    th:href="@{/dormitory-rooms/{id}(id=${lease.property.id})}"
+                                                    th:text="${lease.property.propertyNumber}">
+                                                    22.0501
+                                                </a>
+                                                <span th:unless="${lease.property}">Unknown Property</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Status</th>
+                                            <td>
+                                                <span
+                                                    th:class="${'badge rounded-pill ' + 
+                                                    (lease.status == 'ACTIVE' ? 'text-bg-success' : 
+                                                    (lease.status == 'PENDING' ? 'text-bg-warning' : 
+                                                    (lease.status == 'TERMINATED' ? 'text-bg-danger' : 'text-bg-secondary')))}"
+                                                    th:text="${lease.status}">ACTIVE</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Period</th>
+                                            <td
+                                                th:text="${#temporals.format(lease.startDate, 'dd/MM/yyyy') + ' → ' + #temporals.format(lease.endDate, 'dd/MM/yyyy')}">
+                                                01/01/2023 → 30/06/2023
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,252 @@
+/* Base Styles */
+body {
+    overflow-x: hidden;
+    font-size: 0.9rem;
+}
+
+/* Responsive Container */
+.container-fluid {
+    padding-right: 15px;
+    padding-left: 15px;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Table Responsiveness */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Card sizing */
+.card {
+    overflow: hidden;
+    height: auto !important;
+}
+
+.card-body {
+    overflow-x: auto;
+}
+
+/* Responsive Text */
+@media (max-width: 767.98px) {
+
+    h1,
+    .h1 {
+        font-size: 1.75rem;
+    }
+
+    h2,
+    .h2 {
+        font-size: 1.5rem;
+    }
+
+    h3,
+    .h3 {
+        font-size: 1.25rem;
+    }
+
+    .table {
+        font-size: 0.8rem;
+    }
+
+    .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Form Responsiveness */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 767.98px) {
+    .form-control {
+        font-size: 0.8rem;
+    }
+
+    label {
+        font-size: 0.8rem;
+    }
+}
+
+/* Responsive Sidebar */
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: static;
+        width: 100%;
+        padding: 0;
+        height: auto;
+    }
+
+    .sidebar-sticky {
+        height: auto;
+        position: static;
+    }
+
+    .content {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* Image Responsiveness */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Truncated Text */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Button container responsiveness */
+.button-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+@media (max-width: 575.98px) {
+    .button-container .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Fix for modal dialogs */
+.modal-dialog {
+    max-width: 95%;
+    margin: 1.75rem auto;
+}
+
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: 500px;
+    }
+}
+
+/* Fix for utility navigation */
+@media (max-width: 991.98px) {
+    .navbar-nav .dropdown-menu {
+        position: static;
+        float: none;
+    }
+}
+
+/* Make sure that all elements respect viewpoint size */
+.container,
+.container-fluid,
+.container-sm,
+.container-md,
+.container-lg,
+.container-xl {
+    padding-right: 15px;
+    padding-left: 15px;
+    width: 100%;
+}
+
+/* Enhanced Table Responsiveness for Mobile */
+@media (max-width: 767.98px) {
+
+    /* Convert table to cards on mobile */
+    .table-responsive-stack {
+        width: 100%;
+    }
+
+    .table-responsive-stack thead {
+        display: none;
+    }
+
+    .table-responsive-stack tbody tr {
+        display: block;
+        border: 1px solid rgba(0, 0, 0, .125);
+        border-radius: 0.25rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, .075);
+    }
+
+    .table-responsive-stack tbody td {
+        display: block;
+        text-align: left;
+        padding: 0.25rem 0.5rem;
+        border: none;
+    }
+
+    .table-responsive-stack tbody td:before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+
+    .table-responsive-stack tbody td:not(:last-child) {
+        border-bottom: 1px solid rgba(0, 0, 0, .05);
+    }
+}
+
+/* Fixed header tables for better usability */
+.table-fixed-header {
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+.table-fixed-header thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    z-index: 1;
+}
+
+/* Zebra striping that works with responsive tables */
+.table-responsive-stack tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, .03);
+}
+
+/* Better table hover effect */
+.table-hover.table-responsive-stack tbody tr:hover {
+    background-color: rgba(0, 0, 0, .075);
+    transition: background-color 0.2s ease;
+}
+
+/* Add some horizontal scroll indicators */
+.table-scroll-indicator {
+    position: relative;
+}
+
+.table-scroll-indicator::after {
+    content: '\00BB';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: rgba(0, 0, 0, .5);
+    animation: pulse 1.5s infinite;
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .table-responsive:not(.table-responsive-stack) .table-scroll-indicator::after {
+        display: block;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.2;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.2;
+    }
+}

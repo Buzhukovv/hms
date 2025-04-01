@@ -1,0 +1,2 @@
+-- Initial schema is already created by JPA Hibernate on startup.
+-- This file is a placeholder to establish a baseline for Flyway migrations. 

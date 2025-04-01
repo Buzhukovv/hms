@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    
+    <!-- Suppress Hibernate Statistics Logger -->
+    <logger name="org.hibernate.engine.internal.StatisticalLoggingSessionEventListener" level="OFF"/>
+    
+    <!-- Suppress HikariCP connection pool logs -->
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    
+    <!-- Set log level for our application -->
+    <logger name="housingManagment.hms" level="INFO"/>
+    
+    <!-- Set log level for Spring Boot -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework.boot.web.embedded" level="INFO"/>
+    
+    <!-- Set log level for Hibernate -->
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    
+    <!-- Only show SQL query parameters when needed -->
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN"/>
+</configuration> 
