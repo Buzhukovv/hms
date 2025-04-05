@@ -3,26 +3,36 @@ package housingManagment.hms.controller;
 import housingManagment.hms.dto.LeaseCreateDTO;
 import housingManagment.hms.entities.Lease;
 import housingManagment.hms.entities.property.BaseProperty;
+import housingManagment.hms.entities.property.DormitoryRoom;
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.enums.LeaseStatus;
+import housingManagment.hms.enums.property.PropertyStatus;
+import housingManagment.hms.repository.propertyRepository.PropertyRepository;
+import housingManagment.hms.repository.userRepository.*;
 import housingManagment.hms.service.LeaseService;
+import housingManagment.hms.service.MaintenanceRequestService;
+import housingManagment.hms.service.property.*;
+import housingManagment.hms.service.userService.StudentService;
+import housingManagment.hms.service.userService.TeacherService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
-@RestController
-@RequestMapping("/api/leases")
+@Controller
+@RequestMapping("/leases")
 @RequiredArgsConstructor
 public class LeaseController {
-
     private final LeaseService leaseService;
 
-    // Создание нового договора аренды
     @PostMapping
     public Lease createLease(@RequestBody LeaseCreateDTO dto) {
         return leaseService.createLease(dto);
@@ -40,17 +50,42 @@ public class LeaseController {
     }
 
     // Получение договора аренды по id
-    @GetMapping("/{id}")
-    public Lease getLeaseById(@PathVariable UUID id) {
-        return leaseService.getLeaseById(id);
-    }
 
     // Получение всех договоров аренды
     @GetMapping
-    public List<Lease> getAllLeases() {
-        return leaseService.getAllLeases();
+    public String listLeases(Model model,
+                             @RequestParam(required = false) String status,
+                             @RequestParam(required = false) String search,
+                             @RequestParam(defaultValue = "0") int page,
+                             @RequestParam(defaultValue = "10") int size) {
+        LeaseStatus leaseStatus = null;
+        if (status != null && !status.isEmpty()) {
+            try {
+                leaseStatus = LeaseStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Если передан неверный статус, оставляем фильтр пустым (или можно логировать ошибку)
+            }
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Lease> leasePage = leaseService.getLeasesPaginated(pageable, leaseStatus, search);
+
+        model.addAttribute("leases", leasePage.getContent());
+        model.addAttribute("currentPage", leasePage.getNumber());
+        model.addAttribute("totalPages", leasePage.getTotalPages());
+        model.addAttribute("pageSize", leasePage.getSize());
+        model.addAttribute("totalItems", leasePage.getTotalElements());
+        model.addAttribute("availableSizes", List.of(10, 20, 30, 40));
+
+        return "leases/list";
     }
 
+    @GetMapping("/{id}")
+    public String viewLease(@PathVariable UUID id, Model model) {
+        Lease lease = leaseService.getLeaseById(id);
+        model.addAttribute("lease", lease);
+        return "leases/view";
+    }
 
     @GetMapping("/property/{propertyId}")
     public List<BaseProperty> getUniquePropertiesByLease(@PathVariable UUID propertyId) {

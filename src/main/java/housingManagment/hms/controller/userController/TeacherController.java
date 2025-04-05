@@ -4,13 +4,14 @@ import housingManagment.hms.entities.userEntity.Teacher;
 import housingManagment.hms.service.userService.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
-@RestController
-@RequestMapping("/api/teachers")
+@Controller
+@RequestMapping("/teacher")
 @RequiredArgsConstructor
 public class TeacherController {
 

@@ -1,28 +1,16 @@
-package housingManagment.hms.controller;
+package housingManagment.hms.controller.userController;
 
-import housingManagment.hms.dto.UserListDTO;
-import housingManagment.hms.entities.userEntity.*;
-import housingManagment.hms.enums.userEnum.*;
-import housingManagment.hms.repository.propertyRepository.PropertyRepository;
 import housingManagment.hms.repository.userRepository.*;
-import housingManagment.hms.service.LeaseService;
-import housingManagment.hms.service.MaintenanceRequestService;
-import housingManagment.hms.service.property.*;
 import housingManagment.hms.service.userService.StudentService;
 import housingManagment.hms.service.userService.TeacherService;
 import housingManagment.hms.service.userService.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor

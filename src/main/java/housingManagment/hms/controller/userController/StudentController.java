@@ -21,7 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping("/students")
+@RequestMapping("/student")
 @RequiredArgsConstructor
 @Tag(name = "Student Management", description = "APIs for managing student information")
 public class StudentController {
