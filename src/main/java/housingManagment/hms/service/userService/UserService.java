@@ -20,7 +20,7 @@ public interface UserService {
      * @return the user with the given email, or null if not found
      */
     BaseUser getUserByEmail(String email);
-
+    Map<String, Object> getUserListData(String search, String userType, String role, int page, int size);
     /**
      * Find a user by their ID
      * 

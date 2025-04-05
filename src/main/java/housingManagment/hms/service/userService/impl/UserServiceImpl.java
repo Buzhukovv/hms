@@ -292,10 +292,197 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * Новый метод для формирования данных списка пользователей с фильтрами, постраничным выводом
+     * и формированием опций для дропдаунов (типов пользователей и ролей).
+     *
+     * @param search   поисковый запрос
+     * @param userType тип пользователя ("all", "student", "teacher", "maintenance", "housing", "dss")
+     * @param role     роль для фильтрации
+     * @param page     номер страницы (начиная с 0)
+     * @param size     размер страницы
+     * @return Map с атрибутами, которые можно напрямую добавлять в модель контроллера
+     */
+    @Override
+    public Map<String, Object> getUserListData(String search, String userType, String role, int page, int size) {
+        Map<String, Object> response = new HashMap<>();
+
+        List<BaseUser> allUsers = new ArrayList<>();
+
+        // Выбираем пользователей по типу
+        if (userType == null || userType.isEmpty() || userType.equals("all")) {
+            allUsers.addAll(userRepository.findAll());
+        } else if (userType.equalsIgnoreCase("student")) {
+            allUsers.addAll(studentRepository.findAll());
+        } else if (userType.equalsIgnoreCase("teacher")) {
+            allUsers.addAll(teacherRepository.findAll());
+        } else if (userType.equalsIgnoreCase("maintenance")) {
+            allUsers.addAll(maintenanceRepository.findAll());
+        } else if (userType.equalsIgnoreCase("housing")) {
+            allUsers.addAll(housingManagementRepository.findAll());
+        } else if (userType.equalsIgnoreCase("dss")) {
+            allUsers.addAll(dssRepository.findAll());
+        } else {
+            allUsers.addAll(userRepository.findAll());
+        }
+
+        // Применяем поиск по имени, фамилии, email или nuid
+        if (search != null && !search.isEmpty()) {
+            String searchLower = search.toLowerCase();
+            allUsers = allUsers.stream()
+                    .filter(u -> (u.getFirstName() + " " + u.getLastName()).toLowerCase().contains(searchLower) ||
+                            (u.getEmail() != null && u.getEmail().toLowerCase().contains(searchLower)) ||
+                            String.valueOf(u.getNuid()).contains(searchLower))
+                    .collect(Collectors.toList());
+        }
+
+        // Применяем фильтр по ролям
+        if (role != null && !role.isEmpty()) {
+            allUsers = allUsers.stream()
+                    .filter(u -> {
+                        if (u instanceof Student) {
+                            return ((Student) u).getRole().name().equals(role);
+                        } else if (u instanceof Teacher) {
+                            return ((Teacher) u).getPosition().name().equals(role);
+                        } else if (u instanceof Maintenance) {
+                            return ((Maintenance) u).getRole().name().equals(role);
+                        } else if (u instanceof HousingManagement) {
+                            return ((HousingManagement) u).getRole().name().equals(role);
+                        } else if (u instanceof DSS) {
+                            return ((DSS) u).getRole().name().equals(role);
+                        }
+                        return false;
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Постраничный вывод
+        int totalItems = allUsers.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / size));
+        page = Math.max(0, Math.min(page, totalPages - 1));
+
+        List<BaseUser> pagedUsers;
+        if (totalItems > 0) {
+            int fromIndex = page * size;
+            int toIndex = Math.min(fromIndex + size, totalItems);
+            pagedUsers = allUsers.subList(fromIndex, toIndex);
+        } else {
+            pagedUsers = new ArrayList<>();
+        }
+
+        // Формируем карту для отображения типов пользователей (по id)
+        Map<String, String> userTypeMap = new HashMap<>();
+        for (BaseUser user : pagedUsers) {
+            if (user instanceof Student) {
+                userTypeMap.put(user.getId().toString(), "Student");
+            } else if (user instanceof Teacher) {
+                userTypeMap.put(user.getId().toString(), "Teacher");
+            } else if (user instanceof Maintenance) {
+                userTypeMap.put(user.getId().toString(), "Maintenance");
+            } else if (user instanceof HousingManagement) {
+                userTypeMap.put(user.getId().toString(), "Housing Management");
+            } else if (user instanceof DSS) {
+                userTypeMap.put(user.getId().toString(), "DSS");
+            } else {
+                userTypeMap.put(user.getId().toString(), "Unknown");
+            }
+        }
+
+        response.put("users", pagedUsers);
+        response.put("userTypeMap", userTypeMap);
+        response.put("currentPage", page);
+        response.put("totalPages", totalPages);
+        response.put("pageSize", size);
+        response.put("totalItems", totalItems);
+        response.put("availableSizes", List.of(10, 20, 30, 40));
+
+        // Опции для фильтра по типам пользователей
+        List<Map<String, String>> userTypes = List.of(
+                Map.of("value", "all", "label", "All Users"),
+                Map.of("value", "student", "label", "Students"),
+                Map.of("value", "teacher", "label", "Teachers"),
+                Map.of("value", "maintenance", "label", "Maintenance Staff"),
+                Map.of("value", "housing", "label", "Housing Management"),
+                Map.of("value", "dss", "label", "DSS Staff")
+        );
+        response.put("userTypes", userTypes);
+
+        // Формируем список ролей для выбранного типа пользователя
+        List<Map<String, String>> rolesList = new ArrayList<>();
+        rolesList.add(Map.of("value", "", "label", "All Roles"));
+
+        if (userType == null || userType.isEmpty() || userType.equals("all")) {
+            // Для общего случая объединяем роли из всех категорий
+            for (StudentRole studentRole : StudentRole.values()) {
+                rolesList.add(Map.of("value", studentRole.name(), "label", formatEnumName(studentRole.name())));
+            }
+            for (TeacherPosition teacherPosition : TeacherPosition.values()) {
+                rolesList.add(Map.of("value", teacherPosition.name(), "label", formatEnumName(teacherPosition.name())));
+            }
+            for (MaintenanceRole maintenanceRole : MaintenanceRole.values()) {
+                rolesList.add(Map.of("value", maintenanceRole.name(), "label", formatEnumName(maintenanceRole.name())));
+            }
+            for (HousingManagementRole housingRole : HousingManagementRole.values()) {
+                rolesList.add(Map.of("value", housingRole.name(), "label", formatEnumName(housingRole.name())));
+            }
+            for (DepartmentOfStudentServicesRole dssRole : DepartmentOfStudentServicesRole.values()) {
+                rolesList.add(Map.of("value", dssRole.name(), "label", formatEnumName(dssRole.name())));
+            }
+        } else if (userType.equalsIgnoreCase("student")) {
+            for (StudentRole studentRole : StudentRole.values()) {
+                rolesList.add(Map.of("value", studentRole.name(), "label", formatEnumName(studentRole.name())));
+            }
+        } else if (userType.equalsIgnoreCase("teacher")) {
+            for (TeacherPosition teacherPosition : TeacherPosition.values()) {
+                rolesList.add(Map.of("value", teacherPosition.name(), "label", formatEnumName(teacherPosition.name())));
+            }
+        } else if (userType.equalsIgnoreCase("maintenance")) {
+            for (MaintenanceRole maintenanceRole : MaintenanceRole.values()) {
+                rolesList.add(Map.of("value", maintenanceRole.name(), "label", formatEnumName(maintenanceRole.name())));
+            }
+        } else if (userType.equalsIgnoreCase("housing")) {
+            for (HousingManagementRole housingRole : HousingManagementRole.values()) {
+                rolesList.add(Map.of("value", housingRole.name(), "label", formatEnumName(housingRole.name())));
+            }
+        } else if (userType.equalsIgnoreCase("dss")) {
+            for (DepartmentOfStudentServicesRole dssRole : DepartmentOfStudentServicesRole.values()) {
+                rolesList.add(Map.of("value", dssRole.name(), "label", formatEnumName(dssRole.name())));
+            }
+        }
+        response.put("roles", rolesList);
+
+        response.put("selectedUserType", userType != null ? userType : "all");
+        response.put("selectedRole", role != null ? role : "");
+
+        return response;
+    }
+
+    /**
+     * Приватный метод для форматирования имени ENUM (например, преобразует "ENUM_NAME" в "Enum Name")
+     */
+    private String formatEnumName(String enumName) {
+        String result = enumName.replace("_", " ").toLowerCase();
+        StringBuilder formatted = new StringBuilder(result.length());
+        boolean capitalizeNext = true;
+
+        for (char c : result.toCharArray()) {
+            if (Character.isWhitespace(c)) {
+                capitalizeNext = true;
+                formatted.append(c);
+            } else if (capitalizeNext) {
+                formatted.append(Character.toUpperCase(c));
+                capitalizeNext = false;
+            } else {
+                formatted.append(c);
+            }
+        }
+
+        return formatted.toString();
+    }
+
+    /**
      * Helper method to find a user by email across all user repositories
      */
     private Optional<? extends BaseUser> findUserByEmail(String email) {
-        // Try to find the user in each repository
         Optional<Student> student = studentRepository.findByEmail(email);
         if (student.isPresent()) {
             return student;
@@ -321,11 +508,11 @@ public class UserServiceImpl implements UserService {
             return dss;
         }
 
-        // Fallback to the generic user repository
         return userRepository.findByEmail(email);
     }
 
-    // Helper methods
+    // Helper methods for DTO conversion and sorting
+
     private UserListDTO convertToDTO(BaseUser user) {
         UserListDTO dto = new UserListDTO();
         dto.setId(user.getId());
@@ -340,7 +527,7 @@ public class UserServiceImpl implements UserService {
         dto.setGender(user.getGender());
         dto.setNuid(user.getNuid());
         dto.setIdentityIssueDate(user.getIdentityIssueDate());
-        dto.setStatus("Active"); // You might want to add a status field to BaseUser
+        dto.setStatus("Active");
         return dto;
     }
 
