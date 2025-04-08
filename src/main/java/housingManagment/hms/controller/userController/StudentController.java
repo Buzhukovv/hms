@@ -1,9 +1,14 @@
 package housingManagment.hms.controller.userController;
 
 import housingManagment.hms.entities.Lease;
+import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.Student;
+import housingManagment.hms.enums.userEnum.StudentRole;
 import housingManagment.hms.service.LeaseService;
+import housingManagment.hms.service.userService.BaseUserService;
 import housingManagment.hms.service.userService.StudentService;
+
+import housingManagment.hms.enums.userEnum.schools.SchoolsAndSpecialties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,6 +34,7 @@ public class StudentController {
 
     private final StudentService studentService;
     private final LeaseService leaseService;
+    private final BaseUserService baseUserService;
     @PostMapping
     @Operation(summary = "Create a new student", description = "Creates a new student with the provided information")
     @ApiResponses(value = {
@@ -71,7 +78,7 @@ public class StudentController {
             @ApiResponse(responseCode = "404", description = "Student not found")
     })
     public String viewStudent(@PathVariable UUID id, Model model) {
-        Student student = studentService.getUserById(id);
+        Optional<BaseUser> student = baseUserService.findById(id);
         model.addAttribute("student", student);
 
         // Get leases related to this student
@@ -100,7 +107,7 @@ public class StudentController {
                                @RequestParam(defaultValue = "0") int page,
                                @RequestParam(defaultValue = "10") int size) {
 
-        List<Student> allStudents = studentService.getAllUsers();
+        List<Student> allStudents = baseUserService.findAllByType(Student.class);
 
         // Apply filters if provided
         if (search != null && !search.isEmpty()) {
@@ -148,19 +155,19 @@ public class StudentController {
     @GetMapping("/search")
     @Operation(summary = "Search students", description = "Search students by name or last name")
     public ResponseEntity<List<Student>> searchUsersByNameOrLastName(@RequestParam String keyword) {
-        List<Student> users = studentService.searchUsersByNameOrLastName(keyword);
+        List<Student> users = baseUserService.findAllByType(Student.class);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/role")
     @Operation(summary = "Get students by role", description = "Retrieves students filtered by their role")
-    public ResponseEntity<List<Student>> getUsersByRole(@RequestParam String role) {
-        List<Student> users = studentService.getUsersByRole(role);
+    public ResponseEntity<List<Student>> getUsersByRole(@RequestParam StudentRole role) {
+        List<Student> users = studentService.findStudentsByRole(role);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/school")
-    public ResponseEntity<List<Student>> getUsersBySchool(@RequestParam String school) {
+    public ResponseEntity<List<Student>> getUsersBySchool(@RequestParam SchoolsAndSpecialties school) {
         List<Student> users = studentService.getUsersBySchool(school);
         return ResponseEntity.ok(users);
     }

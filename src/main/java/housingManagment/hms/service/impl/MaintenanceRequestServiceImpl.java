@@ -9,7 +9,7 @@ import housingManagment.hms.enums.MaintenanceRequestStatus;
 import housingManagment.hms.exception.EntityNotFoundException;
 import housingManagment.hms.repository.LeaseRepository;
 import housingManagment.hms.repository.MaintenanceRequestRepository;
-import housingManagment.hms.repository.userRepository.UserRepository;
+import housingManagment.hms.repository.userRepository.BaseUserRepository;
 import housingManagment.hms.service.MaintenanceRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,14 +26,14 @@ import java.util.stream.Collectors;
 public class MaintenanceRequestServiceImpl implements MaintenanceRequestService {
 
     private final MaintenanceRequestRepository maintenanceRequestRepository;
-    private final UserRepository userRepository;
+    private final BaseUserRepository baseUserRepository;
     private final LeaseRepository leaseRepository;
 
     @Override
     @Transactional
     public MaintenanceRequestDTO createRequest(MaintenanceRequestDTO requestDTO) {
         // Verify the requester exists
-        var requesterOptional = userRepository.findById(requestDTO.getRequesterId());
+        var requesterOptional = baseUserRepository.findById(requestDTO.getRequesterId());
         if (requesterOptional.isEmpty()) {
             throw new EntityNotFoundException("User not found with ID: " + requestDTO.getRequesterId());
         }
@@ -101,7 +101,7 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
     @Override
     @Transactional(readOnly = true)
     public List<MaintenanceRequestDTO> getRequestsByAssignedStaff(UUID staffId) {
-        Optional<?> optionalStaff = userRepository.findById(staffId);
+        Optional<?> optionalStaff = baseUserRepository.findById(staffId);
         if (optionalStaff.isEmpty()) {
             throw new EntityNotFoundException("Maintenance staff not found with ID: " + staffId);
         }
@@ -159,7 +159,7 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
         MaintenanceRequest request = maintenanceRequestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("Maintenance request not found with ID: " + requestId));
 
-        Optional<?> optionalStaff = userRepository.findById(staffId);
+        Optional<?> optionalStaff = baseUserRepository.findById(staffId);
         if (optionalStaff.isEmpty()) {
             throw new EntityNotFoundException("Maintenance staff not found with ID: " + staffId);
         }

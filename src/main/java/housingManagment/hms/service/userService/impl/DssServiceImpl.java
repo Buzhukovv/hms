@@ -1,10 +1,13 @@
 package housingManagment.hms.service.userService.impl;
 
+import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.DSS;
-import housingManagment.hms.exception.ResourceNotFoundException;
+import housingManagment.hms.enums.userEnum.DepartmentOfStudentServicesRole;
 import housingManagment.hms.repository.userRepository.DepartmentOfStudentServicesRepository;
+import housingManagment.hms.service.userService.BaseUserService;
 import housingManagment.hms.service.userService.DssService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,14 +22,27 @@ public class DssServiceImpl implements DssService {
 
     private final DepartmentOfStudentServicesRepository repository;
 
+    @Autowired
+    private BaseUserService baseUserService;
+
     @Override
     public DSS createUser(DSS user) {
         return repository.save(user);
     }
 
     @Override
+    @Transactional
     public DSS updateUser(UUID id, DSS user) {
-        DSS existingUser = getUserById(id);
+        // Find the existing user using BaseUserService
+        BaseUser baseUser = baseUserService.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        // Verify that the user is a DSS instance
+        if (!(baseUser instanceof DSS existingUser)) {
+            throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
+        }
+
+        // Update fields
         existingUser.setFirstName(user.getFirstName());
         existingUser.setLastName(user.getLastName());
         existingUser.setMiddleName(user.getMiddleName());
@@ -38,42 +54,31 @@ public class DssServiceImpl implements DssService {
         existingUser.setLocalPhone(user.getLocalPhone());
         existingUser.setPassword(user.getPassword());
         existingUser.setRole(user.getRole());
+
+        // Save and return the updated user
         return repository.save(existingUser);
     }
 
     @Override
+    @Transactional
     public void deleteUser(UUID id) {
-        DSS user = getUserById(id);
+        // Find the user using BaseUserService
+        BaseUser baseUser = baseUserService.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        // Verify that the user is a DSS instance
+        if (!(baseUser instanceof DSS user)) {
+            throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
+        }
+
+        // Delete the user
         repository.delete(user);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public DSS getUserById(UUID id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("DepartmentOfStudentServices user not found with id: " + id));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DSS> getAllUsers() {
-        return repository.findAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DSS> searchUsersByNameOrLastName(String keyword) {
-        return repository.findAll().stream()
-                .filter(user -> user.getFirstName().toLowerCase().contains(keyword.toLowerCase()) ||
-                                user.getLastName().toLowerCase().contains(keyword.toLowerCase()))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DSS> getUsersByRole(String role) {
-        return repository.findAll().stream()
-                .filter(user -> user.getRole().name().equalsIgnoreCase(role))
+    public List<DSS> findDSSByRole(DepartmentOfStudentServicesRole role) {
+        return baseUserService.findAllByType(DSS.class).stream()
+                .filter(dss -> dss.getRole() == role)
                 .collect(Collectors.toList());
     }
 }

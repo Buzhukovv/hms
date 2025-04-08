@@ -10,8 +10,8 @@ import housingManagment.hms.enums.property.PropertyStatus;
 import housingManagment.hms.enums.userEnum.*;
 import housingManagment.hms.repository.LeaseRepository;
 import housingManagment.hms.repository.MaintenanceRequestRepository;
-import housingManagment.hms.repository.userRepository.UserRepository;
 import housingManagment.hms.repository.propertyRepository.PropertyRepository;
+import housingManagment.hms.repository.userRepository.BaseUserRepository;
 import housingManagment.hms.service.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class DashboardServiceImpl implements DashboardService {
 
     @Autowired
-    private UserRepository userRepository; // Lowercase to match field name
+    private BaseUserRepository baseUserRepository; // Lowercase to match field name
 
     @Autowired
     private LeaseRepository leaseRepository;
@@ -141,19 +141,19 @@ public class DashboardServiceImpl implements DashboardService {
 
     private void populateManagerDashboard(DashboardData dashboardData) {
         // Metrics
-        dashboardData.setUserCount(userRepository.count());
+        dashboardData.setUserCount(baseUserRepository.count());
         dashboardData.setPropertyCount(propertyRepository.count());
         dashboardData.setLeaseCount(leaseRepository.count());
         dashboardData.setMaintenanceRequestCount(maintenanceRequestRepository.count());
 
         // Detailed Statistics for User Types
         Map<String, Long> userTypeCounts = new HashMap<>();
-        userTypeCounts.put("Students", userRepository.countByType(Student.class));
-        userTypeCounts.put("Teachers", userRepository.countByType(Teacher.class));
-        userTypeCounts.put("Maintenance", userRepository.countByType(Maintenance.class));
-        userTypeCounts.put("HousingManagement", userRepository.countByType(HousingManagement.class));
-        userTypeCounts.put("FamilyMember", userRepository.countByType(FamilyMember.class));
-        userTypeCounts.put("DSS", userRepository.countByType(DSS.class));
+        userTypeCounts.put("Students", baseUserRepository.countByType(Student.class));
+        userTypeCounts.put("Teachers", baseUserRepository.countByType(Teacher.class));
+        userTypeCounts.put("Maintenance", baseUserRepository.countByType(Maintenance.class));
+        userTypeCounts.put("HousingManagement", baseUserRepository.countByType(HousingManagement.class));
+        userTypeCounts.put("FamilyMember", baseUserRepository.countByType(FamilyMember.class));
+        userTypeCounts.put("DSS", baseUserRepository.countByType(DSS.class));
         dashboardData.setUserTypeCounts(userTypeCounts);
 
         // Detailed Statistics for Property Types
@@ -238,10 +238,10 @@ public class DashboardServiceImpl implements DashboardService {
 
     private void populateDSSAssistantDashboard(DashboardData dashboardData) {
         // Student-specific Metrics
-        dashboardData.setUserCount(userRepository.countByType(Student.class)); // Fix: Count only students
+        dashboardData.setUserCount(baseUserRepository.countByType(Student.class)); // Fix: Count only students
 
         // Student Role Distribution
-        List<? extends BaseUser> studentList = userRepository.findAllByType(Student.class);
+        List<? extends BaseUser> studentList = baseUserRepository.findAllByType(Student.class);
         List<Student> students = studentList.stream()
                 .map(user -> (Student) user)
                 .toList();

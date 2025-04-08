@@ -3,7 +3,7 @@ package housingManagment.hms.controller;
 import housingManagment.hms.dto.DashboardData;
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.service.DashboardService;
-import housingManagment.hms.service.userService.UserService;
+import housingManagment.hms.service.userService.BaseUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,19 +17,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/")
 public class DashboardController {
 
     private final DashboardService dashboardService;
-    private final UserService userService;
+    private final BaseUserService baseUserService;
 
     @Autowired
-    public DashboardController(DashboardService dashboardService, UserService userService) {
+    public DashboardController(DashboardService dashboardService, BaseUserService baseUserService) {
         this.dashboardService = dashboardService;
-        this.userService = userService;
+        this.baseUserService = baseUserService;
     }
 
-    @GetMapping("/dashboard")
+    @GetMapping("/")
     public ResponseEntity<?> getDashboard() {
         try {
             // Get the authenticated user from Spring Security
@@ -41,8 +41,8 @@ public class DashboardController {
 
             // ✅ SAFE way: get email and load full user from UserService
             String email = authentication.getName(); // This always gives you the email
-            BaseUser user = userService.getUserByEmail(email); // Load the actual BaseUser
-
+            BaseUser user = baseUserService.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
             DashboardData data = dashboardService.getDashboardData(user);
 
             // Return the DashboardData as JSON

@@ -3,7 +3,7 @@ package housingManagment.hms.service.userService.impl;
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.FamilyMember;
 import housingManagment.hms.entities.userEntity.Student;
-import housingManagment.hms.repository.userRepository.UserRepository;
+import housingManagment.hms.repository.userRepository.BaseUserRepository;
 import housingManagment.hms.repository.userRepository.FamilyMemberRepository;
 import housingManagment.hms.service.userService.FamilyMemberService;
 import org.springframework.stereotype.Service;
@@ -17,10 +17,10 @@ import java.util.Optional;
 public class FamilyMemberServiceImpl implements FamilyMemberService {
 
     private final FamilyMemberRepository familyMemberRepository;
-    private final UserRepository baseUserRepository;
+    private final BaseUserRepository baseUserRepository;
 
     public FamilyMemberServiceImpl(FamilyMemberRepository familyMemberRepository,
-            UserRepository baseUserRepository) {
+                                   BaseUserRepository baseUserRepository) {
         this.familyMemberRepository = familyMemberRepository;
         this.baseUserRepository = baseUserRepository;
     }

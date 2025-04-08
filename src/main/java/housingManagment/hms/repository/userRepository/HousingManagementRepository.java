@@ -8,9 +8,6 @@ import java.util.List;
 
 @Repository
 public interface HousingManagementRepository extends BaseUserRepository<HousingManagement> {
-    // Поиск по имени или фамилии
-    List<HousingManagement> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName,
-            String lastName);
 
     // Поиск по роли (MANAGER или BLOCK_MANAGER)
     List<HousingManagement> findByRole(HousingManagementRole role);

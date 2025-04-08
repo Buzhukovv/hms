@@ -1,12 +1,17 @@
 package housingManagment.hms.controller.userController;
 
+import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.DSS;
+import housingManagment.hms.entities.userEntity.Teacher;
+import housingManagment.hms.enums.userEnum.DepartmentOfStudentServicesRole;
+import housingManagment.hms.service.userService.BaseUserService;
 import housingManagment.hms.service.userService.DssService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -15,6 +20,8 @@ import java.util.UUID;
 public class DssController {
 
     private final DssService service;
+    private final BaseUserService baseUserService;
+
 
     @PostMapping
     public ResponseEntity<DSS> createUser(@RequestBody DSS user) {
@@ -36,26 +43,27 @@ public class DssController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DSS> getUserById(@PathVariable UUID id) {
-        DSS user = service.getUserById(id);
+    public ResponseEntity<Optional<BaseUser>> getUserById(@PathVariable UUID id) {
+        Optional<BaseUser> user = baseUserService.findById(id);
         return ResponseEntity.ok(user);
     }
 
     @GetMapping
     public ResponseEntity<List<DSS>> getAllUsers() {
-        List<DSS> users = service.getAllUsers();
+        List<DSS> users = baseUserService.findAllByType(DSS.class);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/search")
     public ResponseEntity<List<DSS>> searchUsersByNameOrLastName(@RequestParam String keyword) {
-        List<DSS> users = service.searchUsersByNameOrLastName(keyword);
+        List<DSS> users = baseUserService.findAllByType(DSS.class);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/role")
-    public ResponseEntity<List<DSS>> getUsersByRole(@RequestParam String role) {
-        List<DSS> users = service.getUsersByRole(role);
+    public ResponseEntity<List<DSS>> getUsersByRole(@RequestParam
+                                                    DepartmentOfStudentServicesRole role) {
+        List<DSS> users = service.findDSSByRole(role);
         return ResponseEntity.ok(users);
     }
 }

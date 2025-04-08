@@ -12,9 +12,9 @@ import housingManagment.hms.enums.LeaseStatus;
 import housingManagment.hms.enums.property.PropertyStatus;
 import housingManagment.hms.exception.ResourceNotFoundException;
 import housingManagment.hms.repository.LeaseRepository;
-import housingManagment.hms.repository.userRepository.UserRepository;
 import housingManagment.hms.repository.userRepository.FamilyMemberRepository;
 import housingManagment.hms.repository.propertyRepository.PropertyRepository;
+import housingManagment.hms.repository.userRepository.BaseUserRepository;
 
 import housingManagment.hms.service.LeaseService;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class LeaseServiceImpl implements LeaseService {
 
     private final LeaseRepository leaseRepository;
     private final PropertyRepository propertyRepository;
-    private final UserRepository userRepository;
+    private final BaseUserRepository baseUserRepository;
     private final FamilyMemberRepository familyMemberRepository; // NEW - нужно внедрить
 
     /**
@@ -87,7 +87,7 @@ public class LeaseServiceImpl implements LeaseService {
         BaseProperty property = (BaseProperty) propertyOptional.get();
 
         // Find the tenant
-        var tenantOptional = userRepository.findById(dto.getTenantId());
+        var tenantOptional = baseUserRepository.findById(dto.getTenantId());
         if (tenantOptional.isEmpty()) {
             throw new ResourceNotFoundException("Tenant not found with ID: " + dto.getTenantId());
         }

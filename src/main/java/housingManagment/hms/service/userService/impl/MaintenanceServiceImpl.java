@@ -1,10 +1,15 @@
 package housingManagment.hms.service.userService.impl;
 
+import housingManagment.hms.entities.userEntity.BaseUser;
+import housingManagment.hms.entities.userEntity.HousingManagement;
 import housingManagment.hms.entities.userEntity.Maintenance;
-import housingManagment.hms.exception.ResourceNotFoundException;
+
+import housingManagment.hms.enums.userEnum.MaintenanceRole;
 import housingManagment.hms.repository.userRepository.MaintenanceRepository;
+import housingManagment.hms.service.userService.BaseUserService;
 import housingManagment.hms.service.userService.MaintenanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,16 +22,31 @@ import java.util.stream.Collectors;
 @Transactional
 public class MaintenanceServiceImpl implements MaintenanceService {
 
-    private final MaintenanceRepository repository;
+    private final MaintenanceRepository maintenanceRepository;
 
     @Override
     public Maintenance createUser(Maintenance user) {
-        return repository.save(user);
+        return maintenanceRepository.save(user);
     }
 
+    @Autowired
+    private BaseUserService baseUserService;
+
     @Override
+    @Transactional
     public Maintenance updateUser(UUID id, Maintenance user) {
-        Maintenance existingUser = getUserById(id);
+        // Find the existing user using BaseUserService
+        BaseUser baseUser = baseUserService.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        // Verify that the user is a Maintenance instance
+        if (!(baseUser instanceof Maintenance existingUser)) {
+            throw new IllegalArgumentException("User with id " + id + " is not a Maintenance user");
+        }
+
+        // Cast to HousingManagement
+
+        // Update fields
         existingUser.setFirstName(user.getFirstName());
         existingUser.setLastName(user.getLastName());
         existingUser.setMiddleName(user.getMiddleName());
@@ -38,42 +58,30 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         existingUser.setLocalPhone(user.getLocalPhone());
         existingUser.setPassword(user.getPassword());
         existingUser.setRole(user.getRole());
-        return repository.save(existingUser);
+
+        // Save and return the updated user
+        return maintenanceRepository.save(existingUser);
     }
 
     @Override
+    @Transactional
     public void deleteUser(UUID id) {
-        Maintenance user = getUserById(id);
-        repository.delete(user);
+        // Find the user using BaseUserService
+        BaseUser baseUser = baseUserService.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        // Verify that the user is a HousingManagement instance
+        if (!(baseUser instanceof Maintenance user)) {
+            throw new IllegalArgumentException("User with id " + id + " is not a Maintenance user");
+        }
+        // Delete the user
+        maintenanceRepository.delete(user);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Maintenance getUserById(UUID id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance user not found with id: " + id));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Maintenance> getAllUsers() {
-        return repository.findAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Maintenance> searchUsersByNameOrLastName(String keyword) {
-        return repository.findAll().stream()
-                .filter(user -> user.getFirstName().toLowerCase().contains(keyword.toLowerCase()) ||
-                                user.getLastName().toLowerCase().contains(keyword.toLowerCase()))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Maintenance> getUsersByRole(String role) {
-        return repository.findAll().stream()
-                .filter(user -> user.getRole().name().equalsIgnoreCase(role))
+    public List<Maintenance> findMaintenanceByRole(MaintenanceRole role) {
+        return baseUserService.findAllByType(Maintenance.class).stream()
+                .filter(m -> m.getRole() == role)
                 .collect(Collectors.toList());
     }
 }

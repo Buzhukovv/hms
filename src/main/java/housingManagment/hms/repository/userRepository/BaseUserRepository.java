@@ -3,26 +3,44 @@ package housingManagment.hms.repository.userRepository;
 import housingManagment.hms.entities.userEntity.BaseUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@NoRepositoryBean
-public interface BaseUserRepository<T extends BaseUser> extends JpaRepository<T, UUID> {
+@Repository
+public interface BaseUserRepository<S extends BaseUser> extends JpaRepository<BaseUser, UUID> {
 
-        Optional<T> findByEmail(String email);
+        Optional<BaseUser> findByEmail(String email);
+
+        Optional<BaseUser> findByNuid(int nuid);
+
+        Optional<BaseUser> findByNationalId(int nationalId);
+
+        List<BaseUser> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName);
+
+        long count();
 
         /**
-         * Count all users of the specific type T
+         * Find all users of a specific type
          */
-        @Query("SELECT COUNT(u) FROM #{#entityName} u")
-        long countTenants();
+        @Query("SELECT u FROM BaseUser u WHERE TYPE(u) = :userType")
+        <T extends BaseUser> List<T> findAllByType(@Param("userType") Class<T> userType);
 
         /**
-         * Update a user's password by ID
+         * Count users by type
          */
-        @Query("UPDATE #{#entityName} u SET u.password = :password WHERE u.id = :id")
-        void updatePassword(@Param("id") UUID id, @Param("password") String password);
+        @Query("SELECT COUNT(u) FROM BaseUser u WHERE TYPE(u) = :userType")
+        long countByType(@Param("userType") Class<? extends BaseUser> userType);
+
+        /**
+         * Count all users by type (returns a map of user type to count)
+         */
+        @Query("SELECT TYPE(u) as userType, COUNT(u) as count " +
+                "FROM BaseUser u " +
+                "GROUP BY TYPE(u)")
+        Map<String, Object> countAllTenantTypes();
 }

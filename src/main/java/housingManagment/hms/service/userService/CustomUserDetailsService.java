@@ -7,11 +7,11 @@ import housingManagment.hms.entities.userEntity.Student;
 import housingManagment.hms.entities.userEntity.Teacher;
 import housingManagment.hms.entities.userEntity.DSS;
 import housingManagment.hms.repository.userRepository.HousingManagementRepository;
+import housingManagment.hms.repository.userRepository.BaseUserRepository;
 import housingManagment.hms.repository.userRepository.MaintenanceRepository;
 import housingManagment.hms.repository.userRepository.StudentRepository;
 import housingManagment.hms.repository.userRepository.TeacherRepository;
 import housingManagment.hms.repository.userRepository.DepartmentOfStudentServicesRepository;
-import housingManagment.hms.repository.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,7 +32,7 @@ import java.util.Optional;
 @Slf4j
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final BaseUserRepository baseUserRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final MaintenanceRepository maintenanceRepository;
@@ -69,33 +69,33 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private Optional<? extends BaseUser> findUserByEmail(String email) {
         // Try to find the user in each repository
-        Optional<Student> student = studentRepository.findByEmail(email);
+        Optional<BaseUser> student = studentRepository.findByEmail(email);
         if (student.isPresent()) {
             return student;
         }
 
-        Optional<Teacher> teacher = teacherRepository.findByEmail(email);
+        Optional<BaseUser> teacher = teacherRepository.findByEmail(email);
         if (teacher.isPresent()) {
             return teacher;
         }
 
-        Optional<Maintenance> maintenance = maintenanceRepository.findByEmail(email);
+        Optional<BaseUser> maintenance = maintenanceRepository.findByEmail(email);
         if (maintenance.isPresent()) {
             return maintenance;
         }
 
-        Optional<HousingManagement> housingManagement = housingManagementRepository.findByEmail(email);
+        Optional<BaseUser> housingManagement = housingManagementRepository.findByEmail(email);
         if (housingManagement.isPresent()) {
             return housingManagement;
         }
 
-        Optional<DSS> dss = dssRepository.findByEmail(email);
+        Optional<BaseUser> dss = dssRepository.findByEmail(email);
         if (dss.isPresent()) {
             return dss;
         }
 
         // Fallback to the generic user repository
-        return userRepository.findByEmail(email);
+        return baseUserRepository.findByEmail(email);
     }
 
     private List<GrantedAuthority> getAuthoritiesForUser(BaseUser user) {
