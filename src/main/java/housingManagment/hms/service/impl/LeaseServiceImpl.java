@@ -12,9 +12,10 @@ import housingManagment.hms.enums.LeaseStatus;
 import housingManagment.hms.enums.property.PropertyStatus;
 import housingManagment.hms.exception.ResourceNotFoundException;
 import housingManagment.hms.repository.LeaseRepository;
-import housingManagment.hms.repository.propertyRepository.PropertyRepository;
 import housingManagment.hms.repository.userRepository.UserRepository;
 import housingManagment.hms.repository.userRepository.FamilyMemberRepository;
+import housingManagment.hms.repository.propertyRepository.PropertyRepository;
+
 import housingManagment.hms.service.LeaseService;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;

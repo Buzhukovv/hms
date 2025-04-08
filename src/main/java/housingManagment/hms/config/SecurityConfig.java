@@ -38,13 +38,23 @@ public class SecurityConfig {
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .authorizeHttpRequests(auth -> auth
-                                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-
-                                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**",
-                                                                "/error")
+                                                // Swagger and API docs endpoints
+                                                .requestMatchers("/v3/api-docs/**", "/swagger-ui.html",
+                                                                "/swagger-ui/**",
+                                                                "/swagger-resources/**", "/webjars/**")
                                                 .permitAll()
+
+                                                // Static resources
+                                                .requestMatchers("/css/**", "/js/**", "/images/**", "/error")
+                                                .permitAll()
+
+                                                // Authentication endpoints
                                                 .requestMatchers("/login", "/logout").permitAll()
-                                                .requestMatchers("/api/**").hasAnyRole("ADMIN", "MANAGER")
+
+                                                // API endpoints
+                                        .requestMatchers("/api/dashboard/**").authenticated()
+
+                                        // All other requests require authentication
                                                 .anyRequest().authenticated())
                                 .formLogin(form -> form
                                                 .loginPage("/login")
@@ -62,7 +72,11 @@ public class SecurityConfig {
                                 .rememberMe(rememberMe -> rememberMe
                                                 .key("uniqueAndSecretKey")
                                                 .tokenValiditySeconds(86400) // 1 day
-                                );
+                                )
+                                // Enable CSRF protection
+                                .csrf(csrf -> csrf
+                                                .ignoringRequestMatchers("/api/**", "/v3/api-docs/**",
+                                                                "/swagger-ui/**"));
 
                 return http.build();
         }

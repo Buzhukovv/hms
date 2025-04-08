@@ -5,7 +5,8 @@
 #    password: hms_password
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/hms_db
+    # url: jdbc:postgresql://localhost:5432/hms_db
+    url: jdbc:postgresql://13.48.128.129:5432/hms_db
     username: hms_user
     password: hms_password
   jpa:
@@ -18,7 +19,6 @@ spring:
       hibernate:
         show_sql: false
         format_sql: true
-
 
 # Swagger UI / OpenAPI Configuration
 springdoc:

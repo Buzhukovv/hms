@@ -1,84 +1,64 @@
 package housingManagment.hms.controller;
 
 import housingManagment.hms.dto.DashboardData;
-import housingManagment.hms.dto.MaintenanceRequestDTO;
-import housingManagment.hms.entities.Lease;
-import housingManagment.hms.entities.property.*;
-import housingManagment.hms.entities.userEntity.*;
-import housingManagment.hms.enums.LeaseStatus;
-import housingManagment.hms.enums.MaintenanceRequestStatus;
-import housingManagment.hms.enums.MaintenanceRequestType;
-import housingManagment.hms.enums.property.PropertyStatus;
-import housingManagment.hms.enums.property.RoomTypeDormitory;
-import housingManagment.hms.enums.userEnum.*;
-import housingManagment.hms.repository.propertyRepository.PropertyRepository;
-import housingManagment.hms.repository.userRepository.*;
+import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.service.DashboardService;
-import housingManagment.hms.service.LeaseService;
-import housingManagment.hms.service.MaintenanceRequestService;
-import housingManagment.hms.service.property.*;
-import housingManagment.hms.service.userService.StudentService;
-import housingManagment.hms.service.userService.TeacherService;
+import housingManagment.hms.service.userService.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 
-@Controller
+@RestController
+@RequestMapping("/api")
 public class DashboardController {
 
     private final DashboardService dashboardService;
+    private final UserService userService;
 
     @Autowired
-    public DashboardController(DashboardService dashboardService) {
+    public DashboardController(DashboardService dashboardService, UserService userService) {
         this.dashboardService = dashboardService;
+        this.userService = userService;
     }
 
-    @GetMapping("/")
-    public String dashboard(Model model) {
+    @GetMapping("/dashboard")
+    public ResponseEntity<?> getDashboard() {
         try {
-            DashboardData data = dashboardService.getDashboardData();
+            // Get the authenticated user from Spring Security
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(createErrorResponse("User not authenticated"));
+            }
 
-            model.addAttribute("studentCount", data.getStudentCount());
-            model.addAttribute("roomCount", data.getRoomCount());
-            model.addAttribute("leaseCount", data.getLeaseCount());
-            model.addAttribute("maintenanceRequestCount", data.getMaintenanceRequestCount());
+            // ✅ SAFE way: get email and load full user from UserService
+            String email = authentication.getName(); // This always gives you the email
+            BaseUser user = userService.getUserByEmail(email); // Load the actual BaseUser
 
-            model.addAttribute("userTypeCounts", data.getUserTypeCounts());
-            model.addAttribute("roomTypeCounts", data.getRoomTypeCounts());
-            model.addAttribute("maintenanceStatusCounts", data.getMaintenanceStatusCounts());
+            DashboardData data = dashboardService.getDashboardData(user);
 
-            model.addAttribute("vacantRooms", data.getVacantRooms());
-            model.addAttribute("partiallyOccupiedRooms", data.getPartiallyOccupiedRooms());
-            model.addAttribute("occupiedRooms", data.getOccupiedRooms());
-            model.addAttribute("maintenanceRooms", data.getMaintenanceRooms());
-            model.addAttribute("reservedRooms", data.getReservedRooms());
+            // Return the DashboardData as JSON
+            return ResponseEntity.ok(data);
 
-            model.addAttribute("latestStudents", data.getLatestStudents());
-            model.addAttribute("recentRequests", data.getRecentRequests());
         } catch (Exception e) {
-            // Глобальный fallback
-            model.addAttribute("error", "Error loading dashboard data: " + e.getMessage());
-            // Подставляем безопасные дефолтные значения
-            model.addAttribute("studentCount", 0);
-            model.addAttribute("roomCount", 0);
-            model.addAttribute("leaseCount", 0);
-            model.addAttribute("maintenanceRequestCount", 0);
-            model.addAttribute("vacantRooms", 0);
-            model.addAttribute("occupiedRooms", 0);
-            model.addAttribute("maintenanceRooms", 0);
-            model.addAttribute("reservedRooms", 0);
-            model.addAttribute("latestStudents", new java.util.ArrayList<>());
-            model.addAttribute("recentRequests", new java.util.ArrayList<>());
+            // Return a JSON error response with a 500 status code
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Error loading dashboard data: " + e.getMessage()));
         }
+    }
 
-        return "dashboard";
+    // Helper method to create a JSON error response
+    private Map<String, Object> createErrorResponse(String message) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", message);
+        return errorResponse;
     }
 }
-

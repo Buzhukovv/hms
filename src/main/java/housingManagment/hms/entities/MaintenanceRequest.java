@@ -3,6 +3,7 @@ package housingManagment.hms.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.Maintenance;
+import housingManagment.hms.entities.property.BaseProperty;
 import housingManagment.hms.enums.MaintenanceRequestStatus;
 import housingManagment.hms.enums.MaintenanceRequestType;
 import jakarta.persistence.*;

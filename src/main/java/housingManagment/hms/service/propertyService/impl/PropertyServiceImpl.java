@@ -3,8 +3,9 @@ package housingManagment.hms.service.propertyService.impl;
 import housingManagment.hms.dto.PropertyListDTO;
 import housingManagment.hms.entities.property.*;
 import housingManagment.hms.enums.property.*;
-import housingManagment.hms.repository.propertyRepository.PropertyRepository;
 import housingManagment.hms.service.propertyService.PropertyService;
+import housingManagment.hms.repository.propertyRepository.PropertyRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
