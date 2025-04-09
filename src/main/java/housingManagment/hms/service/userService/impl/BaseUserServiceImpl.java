@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+// TODO : Check all of the endpoints and add if business logic needs new endpoints
+
 @Service
 public class BaseUserServiceImpl implements BaseUserService {
 

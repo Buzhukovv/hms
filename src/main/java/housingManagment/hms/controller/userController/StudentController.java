@@ -27,7 +27,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/student")
+@RequestMapping("/api/students")
 @RequiredArgsConstructor
 @Tag(name = "User Management", description = "APIs for managing user information")
 public class StudentController {
@@ -70,6 +70,7 @@ public class StudentController {
         studentService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
 
     @GetMapping("/nuid/{nuid}")
     @Operation(summary = "Get User by NUID", description = "Fetches the user details for the given NUID")

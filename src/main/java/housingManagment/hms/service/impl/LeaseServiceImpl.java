@@ -30,6 +30,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+// TODO : Check all of the endpoints and add if business logic needs new endpoints
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -585,6 +587,7 @@ public class LeaseServiceImpl implements LeaseService {
             // This would require a custom query to find all properties not in the above
             // list
             // For now, we'll leave this as a TODO item
+
         } catch (Exception e) {
             System.err.println("Error synchronizing property statuses: " + e.getMessage());
         }
