@@ -3,6 +3,7 @@ package housingManagment.hms.controller;
 import housingManagment.hms.dto.MaintenanceRequestDTO;
 import housingManagment.hms.enums.MaintenanceRequestStatus;
 import housingManagment.hms.service.MaintenanceRequestService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/maintenance-requests")
 @RequiredArgsConstructor
+@Tag(name = "Maintenance Request Controller", description = "APIs for managing maintenance requests")
 public class MaintenanceRequestController {
 
     private final MaintenanceRequestService maintenanceRequestService;

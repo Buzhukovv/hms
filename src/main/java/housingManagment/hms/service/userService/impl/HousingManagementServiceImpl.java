@@ -2,6 +2,7 @@ package housingManagment.hms.service.userService.impl;
 
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.HousingManagement;
+import housingManagment.hms.entities.userEntity.Teacher;
 import housingManagment.hms.enums.userEnum.HousingManagementRole;
 import housingManagment.hms.exception.ResourceNotFoundException;
 import housingManagment.hms.repository.userRepository.HousingManagementRepository;
@@ -30,21 +31,22 @@ public class HousingManagementServiceImpl implements HousingManagementService {
     private BaseUserService baseUserService;
 
     @Override
-    public HousingManagement createUser(HousingManagement user) {return housingManagementRepository.save(user);}
+    public HousingManagement createUser(HousingManagement user) {
+        return (HousingManagement) housingManagementRepository.save(user);
+    }
 
     @Override
     @Transactional
     public HousingManagement updateUser(UUID id, HousingManagement user) {
         // Find the existing user using BaseUserService
-        BaseUser baseUser = baseUserService.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
 
-        // Verify that the user is a HousingManagement instance
-        if (!(baseUser instanceof HousingManagement existingUser)) {
+        // Verify that the user is a DSS instance
+        if (baseUser.isEmpty()) {
             throw new IllegalArgumentException("User with id " + id + " is not a HousingManagement user");
         }
 
-        // Cast to HousingManagement
+        HousingManagement existingUser = (HousingManagement) baseUser.get();
 
         // Update fields
         existingUser.setFirstName(user.getFirstName());
@@ -61,23 +63,24 @@ public class HousingManagementServiceImpl implements HousingManagementService {
         existingUser.setBlock(user.getBlock());
 
         // Save and return the updated user
-        return housingManagementRepository.save(existingUser);
+        return (HousingManagement) housingManagementRepository.save(existingUser);
     }
 
     @Override
     @Transactional
     public void deleteUser(UUID id) {
         // Find the user using BaseUserService
-        BaseUser baseUser = baseUserService.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
 
-        // Verify that the user is a HousingManagement instance
-        if (!(baseUser instanceof HousingManagement user)) {
+        // Verify that the user is a DSS instance
+        if (baseUser.isEmpty()) {
             throw new IllegalArgumentException("User with id " + id + " is not a HousingManagement user");
         }
 
+        HousingManagement existingUser = (HousingManagement) baseUser.get();
+
         // Delete the user
-        housingManagementRepository.delete(user);
+        housingManagementRepository.delete(existingUser);
     }
 
 

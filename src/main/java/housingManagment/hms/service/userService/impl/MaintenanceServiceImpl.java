@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
 
     @Override
     public Maintenance createUser(Maintenance user) {
-        return maintenanceRepository.save(user);
+        return (Maintenance) maintenanceRepository.save(user);
     }
 
     @Autowired
@@ -36,15 +37,15 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     @Transactional
     public Maintenance updateUser(UUID id, Maintenance user) {
         // Find the existing user using BaseUserService
-        BaseUser baseUser = baseUserService.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
 
-        // Verify that the user is a Maintenance instance
-        if (!(baseUser instanceof Maintenance existingUser)) {
-            throw new IllegalArgumentException("User with id " + id + " is not a Maintenance user");
+        // Verify that the user is a DSS instance
+        if (baseUser.isEmpty()) {
+            throw new IllegalArgumentException("User with id " + id + " is not a HousingManagement user");
         }
 
-        // Cast to HousingManagement
+        Maintenance existingUser = (Maintenance) baseUser.get();
+
 
         // Update fields
         existingUser.setFirstName(user.getFirstName());
@@ -60,22 +61,23 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         existingUser.setRole(user.getRole());
 
         // Save and return the updated user
-        return maintenanceRepository.save(existingUser);
+        return (Maintenance) maintenanceRepository.save(existingUser);
     }
 
     @Override
     @Transactional
     public void deleteUser(UUID id) {
         // Find the user using BaseUserService
-        BaseUser baseUser = baseUserService.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-
-        // Verify that the user is a HousingManagement instance
-        if (!(baseUser instanceof Maintenance user)) {
-            throw new IllegalArgumentException("User with id " + id + " is not a Maintenance user");
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
+        // Verify that the user is a DSS instance
+        if (baseUser.isEmpty()) {
+            throw new IllegalArgumentException("User with id " + id + " is not a HousingManagement user");
         }
+
+        Maintenance existingUser = (Maintenance) baseUser.get();
+
         // Delete the user
-        maintenanceRepository.delete(user);
+        maintenanceRepository.delete(existingUser);
     }
 
     @Override

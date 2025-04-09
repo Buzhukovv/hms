@@ -5,6 +5,7 @@ import housingManagment.hms.repository.userRepository.BaseUserRepository;
 import housingManagment.hms.service.userService.BaseUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -18,22 +19,26 @@ public class BaseUserServiceImpl implements BaseUserService {
     private BaseUserRepository baseUserRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<BaseUser> findById(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
         return baseUserRepository.findById(id);
     }
 
     @Override
-    public Optional<BaseUser> findByEmail(String email) {
+    public BaseUser findByEmail(String email) {
         return baseUserRepository.findByEmail(email);
     }
 
     @Override
-    public Optional<BaseUser> findByNuid(int nuid) {
+    public BaseUser findByNuid(int nuid) {
         return baseUserRepository.findByNuid(nuid);
     }
 
     @Override
-    public Optional<BaseUser> findByNationalId(int nationalId) {
+    public BaseUser findByNationalId(int nationalId) {
         return baseUserRepository.findByNationalId(nationalId);
     }
 
@@ -44,8 +49,31 @@ public class BaseUserServiceImpl implements BaseUserService {
 
     @Override
     public List<BaseUser> findByName(String name) {
-        return baseUserRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(name, name);
+        return List.of();
     }
+
+    @Override
+    public BaseUser updateUser(UUID id, BaseUser user){
+
+        BaseUser existingUser = user;
+
+        // Update fields
+        existingUser.setFirstName(user.getFirstName());
+        existingUser.setLastName(user.getLastName());
+        existingUser.setMiddleName(user.getMiddleName());
+        existingUser.setNationalId(user.getNationalId());
+        existingUser.setNuid(user.getNuid());
+        existingUser.setIdentityDocNo(user.getIdentityDocNo());
+        existingUser.setIdentityIssueDate(user.getIdentityIssueDate());
+        existingUser.setEmail(user.getEmail());
+        existingUser.setLocalPhone(user.getLocalPhone());
+        existingUser.setPassword(user.getPassword());
+
+        // Save and return the updated user
+        return (BaseUser) baseUserRepository.save(existingUser);
+    }
+
+
 
     @Override
     public BaseUser save(BaseUser user) {
@@ -63,7 +91,7 @@ public class BaseUserServiceImpl implements BaseUserService {
     }
 
     @Override
-    public <T extends BaseUser> List<T> findAllByType(Class<T> userType) {
+    public <T extends BaseUser> List findAllByType(Class<T> userType) {
         return baseUserRepository.findAllByType(userType)
                 .stream()
                 .map(userType::cast)

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface HousingManagementRepository extends BaseUserRepository<HousingManagement> {
+public interface HousingManagementRepository extends BaseUserRepository {
 
     // Поиск по роли (MANAGER или BLOCK_MANAGER)
     List<HousingManagement> findByRole(HousingManagementRole role);

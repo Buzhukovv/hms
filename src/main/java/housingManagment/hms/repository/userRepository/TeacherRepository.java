@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TeacherRepository extends BaseUserRepository<Teacher> {
+public interface TeacherRepository extends BaseUserRepository {
     // Поиск по школе
     List<Teacher> findBySchool(SchoolsAndSpecialties school);
 }

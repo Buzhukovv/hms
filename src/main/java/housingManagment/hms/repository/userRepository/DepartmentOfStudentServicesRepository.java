@@ -4,8 +4,6 @@ import housingManagment.hms.entities.userEntity.DSS;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DepartmentOfStudentServicesRepository extends BaseUserRepository<DSS> {
-
-
+public interface DepartmentOfStudentServicesRepository extends BaseUserRepository {
 
 }

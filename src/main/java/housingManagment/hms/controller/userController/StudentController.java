@@ -26,10 +26,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Controller
-@RequestMapping("/student")
+@RestController
+@RequestMapping("/api/student")
 @RequiredArgsConstructor
-@Tag(name = "Student Management", description = "APIs for managing student information")
+@Tag(name = "User Management", description = "APIs for managing user information")
 public class StudentController {
 
     private final StudentService studentService;
@@ -71,91 +71,19 @@ public class StudentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get student by ID", description = "Retrieves a student's information by their ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Student found"),
-            @ApiResponse(responseCode = "404", description = "Student not found")
-    })
-    public String viewStudent(@PathVariable UUID id, Model model) {
-        Optional<BaseUser> student = baseUserService.findById(id);
-        model.addAttribute("student", student);
-
-        // Get leases related to this student
-        List<Lease> leases = leaseService.getLeasesByTenant(id);
-
-        // Ensure eager loading of properties to avoid LazyInitializationException in
-        // view
-        for (Lease lease : leases) {
-            if (lease.getProperty() != null) {
-                // Access property data to force initialization
-                lease.getProperty().getPropertyNumber();
-                lease.getProperty().getPropertyBlock();
-            }
-        }
-
-        model.addAttribute("leases", leases);
-
-        return "students/view";
-    }
-
-    @GetMapping
-    @Operation(summary = "Get all students", description = "Retrieves a list of all students")
-    public String listStudents(Model model,
-                               @RequestParam(required = false) String search,
-                               @RequestParam(required = false) String role,
-                               @RequestParam(defaultValue = "0") int page,
-                               @RequestParam(defaultValue = "10") int size) {
-
-        List<Student> allStudents = baseUserService.findAllByType(Student.class);
-
-        // Apply filters if provided
-        if (search != null && !search.isEmpty()) {
-            String searchLower = search.toLowerCase();
-            allStudents = allStudents.stream()
-                    .filter(s -> (s.getFirstName() + " " + s.getLastName()).toLowerCase().contains(searchLower))
-                    .collect(Collectors.toList());
-        }
-
-        if (role != null && !role.isEmpty()) {
-            allStudents = allStudents.stream()
-                    .filter(s -> s.getRole().toString().equals(role))
-                    .collect(Collectors.toList());
-        }
-
-        // Pagination logic
-        int totalItems = allStudents.size();
-        // Ensure totalPages is at least 1 to prevent errors in the template
-        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / size));
-
-        // Ensure page is within bounds
-        page = Math.max(0, Math.min(page, totalPages - 1));
-
-        // Extract the current page items
-        List<Student> pagedStudents;
-        if (totalItems > 0) {
-            int fromIndex = page * size;
-            int toIndex = Math.min(fromIndex + size, totalItems);
-            pagedStudents = allStudents.subList(fromIndex, toIndex);
-        } else {
-            pagedStudents = new ArrayList<>();
-        }
-
-        // Add pagination attributes to the model
-        model.addAttribute("students", pagedStudents);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", totalPages);
-        model.addAttribute("pageSize", size);
-        model.addAttribute("totalItems", totalItems);
-        model.addAttribute("availableSizes", List.of(10, 20, 30, 40));
-
-        return "students/list";
+    @GetMapping("/nuid/{nuid}")
+    @Operation(summary = "Get User by NUID", description = "Fetches the user details for the given NUID")
+    public ResponseEntity<BaseUser> getUserByNuid(@PathVariable int nuid) {
+        BaseUser user = baseUserService.findByNuid(nuid);
+        return ResponseEntity.ok(user);
     }
 
     @GetMapping("/search")
     @Operation(summary = "Search students", description = "Search students by name or last name")
     public ResponseEntity<List<Student>> searchUsersByNameOrLastName(@RequestParam String keyword) {
-        List<Student> users = baseUserService.findAllByType(Student.class);
+        List<Student> users = baseUserService.findAllByType(Student.class).stream()
+                .filter(s -> (s.getFirstName() + " " + s.getLastName()).toLowerCase().contains(keyword.toLowerCase()))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
 

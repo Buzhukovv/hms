@@ -3,7 +3,6 @@ package housingManagment.hms.config;
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.service.userService.CustomUserDetailsService;
 import housingManagment.hms.service.userService.BaseUserService; // Ensure this import matches your package structure
-import housingManagment.hms.config.CustomAuthenticationProvider;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -98,8 +97,7 @@ public class SecurityConfig {
 
                                 try {
                                         // Unwrap the Optional<BaseUser> and throw an exception if the user is not found
-                                        BaseUser user = baseUserService.findByEmail(email)
-                                                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                                        BaseUser user = baseUserService.findByEmail(email);
                                         String fullName = user.getFirstName() + " " + user.getLastName();
                                         session.setAttribute("userFullName", fullName);
                                 } catch (Exception e) {

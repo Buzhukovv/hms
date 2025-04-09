@@ -10,7 +10,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface StudentRepository extends BaseUserRepository<Student> {
+public interface StudentRepository extends BaseUserRepository {
+
     @Query("SELECT s FROM Student s WHERE s.role = :role")
     List<Student> findByStudentRole(StudentRole role);
 

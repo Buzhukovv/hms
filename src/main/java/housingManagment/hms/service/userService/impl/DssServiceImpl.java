@@ -2,6 +2,7 @@ package housingManagment.hms.service.userService.impl;
 
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.DSS;
+import housingManagment.hms.entities.userEntity.Maintenance;
 import housingManagment.hms.enums.userEnum.DepartmentOfStudentServicesRole;
 import housingManagment.hms.repository.userRepository.DepartmentOfStudentServicesRepository;
 import housingManagment.hms.service.userService.BaseUserService;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,20 +29,21 @@ public class DssServiceImpl implements DssService {
 
     @Override
     public DSS createUser(DSS user) {
-        return repository.save(user);
+        return (DSS) repository.save(user);
     }
 
     @Override
     @Transactional
     public DSS updateUser(UUID id, DSS user) {
         // Find the existing user using BaseUserService
-        BaseUser baseUser = baseUserService.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
 
         // Verify that the user is a DSS instance
-        if (!(baseUser instanceof DSS existingUser)) {
+        if (baseUser.isEmpty()) {
             throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
         }
+
+        DSS existingUser = (DSS) baseUser.get();
 
         // Update fields
         existingUser.setFirstName(user.getFirstName());
@@ -56,23 +59,24 @@ public class DssServiceImpl implements DssService {
         existingUser.setRole(user.getRole());
 
         // Save and return the updated user
-        return repository.save(existingUser);
+        return (DSS) repository.save(existingUser);
     }
 
     @Override
     @Transactional
     public void deleteUser(UUID id) {
         // Find the user using BaseUserService
-        BaseUser baseUser = baseUserService.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
 
         // Verify that the user is a DSS instance
-        if (!(baseUser instanceof DSS user)) {
+        if (baseUser.isEmpty()) {
             throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
         }
 
+        DSS existingUser = (DSS) baseUser.get();
+
         // Delete the user
-        repository.delete(user);
+        repository.delete(existingUser);
     }
 
     @Override

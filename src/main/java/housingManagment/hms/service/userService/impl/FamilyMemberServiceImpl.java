@@ -32,16 +32,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
     @Override
     @Transactional
     public FamilyMember createFamilyMember(FamilyMember familyMember) {
-        Optional<?> userOptional = baseUserRepository.findById(familyMember.getMainUser().getId());
-        if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("Основной пользователь не найден");
-        }
-        BaseUser mainUser = (BaseUser) userOptional.get();
 
-        if (mainUser instanceof Student) {
-            throw new IllegalArgumentException("Члены семьи не могут быть привязаны к студенту.");
-        }
-        familyMember.setMainUser(mainUser);
         return familyMemberRepository.save(familyMember);
     }
 

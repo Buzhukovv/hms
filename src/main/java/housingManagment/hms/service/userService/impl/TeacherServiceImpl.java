@@ -1,6 +1,7 @@
 package housingManagment.hms.service.userService.impl;
 
 import housingManagment.hms.entities.userEntity.BaseUser;
+import housingManagment.hms.entities.userEntity.Maintenance;
 import housingManagment.hms.entities.userEntity.Teacher;
 import housingManagment.hms.enums.userEnum.TeacherPosition;
 import housingManagment.hms.enums.userEnum.schools.SchoolsAndSpecialties;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,20 +30,21 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     public Teacher createUser(Teacher user) {
-        return repository.save(user);
+        return (Teacher) repository.save(user);
     }
 
     @Override
     @Transactional
     public Teacher updateUser(UUID id, Teacher user) {
         // Find the existing user using BaseUserService
-        BaseUser baseUser = baseUserService.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
 
-        // Verify that the user is a Teacher instance
-        if (!(baseUser instanceof Teacher existingUser)) {
-            throw new IllegalArgumentException("User with id " + id + " is not a Teacher user");
+        // Verify that the user is a DSS instance
+        if (baseUser.isEmpty()) {
+            throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
         }
+
+        Teacher existingUser = (Teacher) baseUser.get();
 
         // Update fields
         existingUser.setFirstName(user.getFirstName());
@@ -57,23 +60,24 @@ public class TeacherServiceImpl implements TeacherService {
         existingUser.setPosition(user.getPosition());
 
         // Save and return the updated user
-        return repository.save(existingUser);
+        return (Teacher) repository.save(existingUser);
     }
 
     @Override
     @Transactional
     public void deleteUser(UUID id) {
         // Find the user using BaseUserService
-        BaseUser baseUser = baseUserService.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
 
-        // Verify that the user is a Teacher instance
-        if (!(baseUser instanceof Teacher user)) {
-            throw new IllegalArgumentException("User with id " + id + " is not a Teacher user");
+        // Verify that the user is a DSS instance
+        if (baseUser.isEmpty()) {
+            throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
         }
 
+        Teacher existingUser = (Teacher) baseUser.get();
+
         // Delete the user
-        repository.delete(user);
+        repository.delete(existingUser);
     }
 
 

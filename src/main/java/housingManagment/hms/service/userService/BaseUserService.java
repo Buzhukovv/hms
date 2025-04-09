@@ -10,12 +10,12 @@ import java.util.UUID;
 public interface BaseUserService {
 
     Optional<BaseUser> findById(UUID id);
+    BaseUser findByEmail(String email);
+    BaseUser updateUser(UUID id, BaseUser user);
 
-    Optional<BaseUser> findByEmail(String email);
+    BaseUser findByNuid(int nuid);
 
-    Optional<BaseUser> findByNuid(int nuid);
-
-    Optional<BaseUser> findByNationalId(int nationalId);
+    BaseUser findByNationalId(int nationalId);
 
     List<BaseUser> findAll();
 
@@ -26,6 +26,7 @@ public interface BaseUserService {
     void deleteById(UUID id);
 
     long count();
+
 
     <T extends BaseUser> List<T> findAllByType(Class<T> userType);
 

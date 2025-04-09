@@ -33,23 +33,22 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
     @Transactional
     public MaintenanceRequestDTO createRequest(MaintenanceRequestDTO requestDTO) {
         // Verify the requester exists
-        var requesterOptional = baseUserRepository.findById(requestDTO.getRequesterId());
-        if (requesterOptional.isEmpty()) {
-            throw new EntityNotFoundException("User not found with ID: " + requestDTO.getRequesterId());
+        Optional<BaseUser> requester = baseUserRepository.findById(requestDTO.getRequesterId());
+        if (!requester.isPresent()) {
+            throw new IllegalArgumentException("Requester not found with ID: " + requestDTO.getRequesterId());
         }
-        BaseUser requester = (BaseUser) requesterOptional.get();
-
+        BaseUser requesterUser = requester.get();
         // Verify the lease exists and is associated with the requester
         Lease lease = leaseRepository.findById(requestDTO.getLeaseId())
                 .orElseThrow(() -> new EntityNotFoundException("Lease not found with ID: " + requestDTO.getLeaseId()));
 
         // Verify the requester is the tenant of the lease
-        if (!lease.getTenant().getId().equals(requester.getId())) {
+        if (!lease.getTenant().getId().equals(requesterUser.getId())) {
             throw new IllegalArgumentException("The requester is not the tenant of the specified lease");
         }
 
         MaintenanceRequest maintenanceRequest = MaintenanceRequest.builder()
-                .requester(requester)
+                .requester(requesterUser)
                 .lease(lease)
                 .title(requestDTO.getTitle())
                 .description(requestDTO.getDescription())
@@ -101,17 +100,14 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
     @Override
     @Transactional(readOnly = true)
     public List<MaintenanceRequestDTO> getRequestsByAssignedStaff(UUID staffId) {
-        Optional<?> optionalStaff = baseUserRepository.findById(staffId);
-        if (optionalStaff.isEmpty()) {
-            throw new EntityNotFoundException("Maintenance staff not found with ID: " + staffId);
-        }
-        Maintenance staff = (Maintenance) optionalStaff.get();
-
-        if (!(staff instanceof Maintenance)) {
-            throw new IllegalArgumentException("The specified user is not a maintenance staff");
+        Optional<BaseUser> staff = baseUserRepository.findById(staffId);
+        if (!staff.isPresent()) {
+            throw new IllegalArgumentException("Staff not found with ID: " + staffId);
         }
 
-        return maintenanceRequestRepository.findByAssignedTo(staff)
+        BaseUser staffUser = staff.get();
+
+        return maintenanceRequestRepository.findByAssignedTo((Maintenance) staffUser)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -159,15 +155,12 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
         MaintenanceRequest request = maintenanceRequestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("Maintenance request not found with ID: " + requestId));
 
-        Optional<?> optionalStaff = baseUserRepository.findById(staffId);
-        if (optionalStaff.isEmpty()) {
-            throw new EntityNotFoundException("Maintenance staff not found with ID: " + staffId);
+        Optional<BaseUser> Staff = baseUserRepository.findById(staffId);
+        if (!Staff.isPresent()) {
+            throw new IllegalArgumentException("Staff not found with ID: " + staffId);
         }
-        Maintenance staff = (Maintenance) optionalStaff.get();
 
-        if (!(staff instanceof Maintenance)) {
-            throw new IllegalArgumentException("The specified user is not a maintenance staff");
-        }
+        Maintenance staff = (Maintenance) Staff.get();
 
         request.setAssignedTo(staff);
 

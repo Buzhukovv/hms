@@ -44,22 +44,21 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         log.debug("Attempting to authenticate user with email: {}", email);
 
-        Optional<? extends BaseUser> userOpt = findUserByEmail(email);
-        if (userOpt.isEmpty()) {
+        BaseUser userOpt = findUserByEmail(email);
+        if (userOpt == null) {
             log.warn("User not found with email: {}", email);
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
 
-        BaseUser user = userOpt.get();
-        log.debug("User found: {} ({})", user.getEmail(), user.getClass().getSimpleName());
+        log.debug("User found: {} ({})", userOpt.getEmail(), userOpt.getClass().getSimpleName());
 
-        List<GrantedAuthority> authorities = getAuthoritiesForUser(user);
+        List<GrantedAuthority> authorities = getAuthoritiesForUser(userOpt);
 
         // Return the user details - password validation is handled by the custom
         // AuthenticationProvider
         return new User(
-                user.getEmail(),
-                user.getPassword(),
+                userOpt.getEmail(),
+                userOpt.getPassword(),
                 true, // enabled
                 true, // accountNonExpired
                 true, // credentialsNonExpired
@@ -67,33 +66,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 authorities);
     }
 
-    private Optional<? extends BaseUser> findUserByEmail(String email) {
-        // Try to find the user in each repository
-        Optional<BaseUser> student = studentRepository.findByEmail(email);
-        if (student.isPresent()) {
-            return student;
-        }
-
-        Optional<BaseUser> teacher = teacherRepository.findByEmail(email);
-        if (teacher.isPresent()) {
-            return teacher;
-        }
-
-        Optional<BaseUser> maintenance = maintenanceRepository.findByEmail(email);
-        if (maintenance.isPresent()) {
-            return maintenance;
-        }
-
-        Optional<BaseUser> housingManagement = housingManagementRepository.findByEmail(email);
-        if (housingManagement.isPresent()) {
-            return housingManagement;
-        }
-
-        Optional<BaseUser> dss = dssRepository.findByEmail(email);
-        if (dss.isPresent()) {
-            return dss;
-        }
-
+    private BaseUser findUserByEmail(String email) {
         // Fallback to the generic user repository
         return baseUserRepository.findByEmail(email);
     }

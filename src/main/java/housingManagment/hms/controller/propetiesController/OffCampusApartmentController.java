@@ -3,6 +3,7 @@ package housingManagment.hms.controller.propetiesController;
 import housingManagment.hms.entities.property.OffCampusApartment;
 import housingManagment.hms.enums.property.PropertyStatus;
 import housingManagment.hms.service.property.OffCampusApartmentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/off-campus-properties")
 @RequiredArgsConstructor
+@Tag(name = "Property Controller")
 public class OffCampusApartmentController {
 
     private final OffCampusApartmentService offCampusApartmentService;

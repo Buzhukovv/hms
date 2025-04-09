@@ -8,19 +8,15 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface BaseUserRepository<S extends BaseUser> extends JpaRepository<BaseUser, UUID> {
+public interface BaseUserRepository extends JpaRepository<BaseUser, UUID> {
+        BaseUser findByEmail(String email);
 
-        Optional<BaseUser> findByEmail(String email);
+        BaseUser findByNuid(int nuid);
 
-        Optional<BaseUser> findByNuid(int nuid);
-
-        Optional<BaseUser> findByNationalId(int nationalId);
-
-        List<BaseUser> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName);
+        BaseUser findByNationalId(int nationalId);
 
         long count();
 
