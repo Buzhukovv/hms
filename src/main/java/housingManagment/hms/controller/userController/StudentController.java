@@ -71,6 +71,14 @@ public class StudentController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("")
+    @Operation(summary = "Get All Student users", description = " Retrieves all students")
+    public ResponseEntity<List<Student>> getAllUsers() {
+        List<Student> users = baseUserService.findAllByType(Student.class);
+        return ResponseEntity.ok(users);
+    }
+
+
 
     @GetMapping("/nuid/{nuid}")
     @Operation(summary = "Get User by NUID", description = "Fetches the user details for the given NUID")
