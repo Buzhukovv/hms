@@ -7,14 +7,18 @@ import housingManagment.hms.entities.property.*;
 import housingManagment.hms.entities.userEntity.*;
 import housingManagment.hms.enums.LeaseStatus;
 import housingManagment.hms.enums.property.PropertyStatus;
-import housingManagment.hms.enums.userEnum.*;
+import housingManagment.hms.enums.userEnum.DepartmentOfStudentServicesRole;
+import housingManagment.hms.enums.userEnum.HousingManagementRole;
+import housingManagment.hms.enums.userEnum.MaintenanceRole;
 import housingManagment.hms.repository.LeaseRepository;
 import housingManagment.hms.repository.MaintenanceRequestRepository;
 import housingManagment.hms.repository.propertyRepository.PropertyRepository;
 import housingManagment.hms.repository.userRepository.BaseUserRepository;
 import housingManagment.hms.service.DashboardService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.hibernate.Hibernate;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,24 +26,113 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-
-// TODO : Check all of the endpoints and add if business logic needs new endpoints
-
-
 @Service
+@Transactional(readOnly = true)
 public class DashboardServiceImpl implements DashboardService {
 
-    @Autowired
-    private BaseUserRepository baseUserRepository; // Lowercase to match field name
+    private final LeaseRepository leaseRepository;
+    private final MaintenanceRequestRepository maintenanceRequestRepository;
+    private final BaseUserRepository userRepository;
+    private final PropertyRepository propertyRepository;
 
-    @Autowired
-    private LeaseRepository leaseRepository;
+    public DashboardServiceImpl(LeaseRepository leaseRepository,
+                                MaintenanceRequestRepository maintenanceRequestRepository,
+                                @Qualifier("baseUserRepository") BaseUserRepository userRepository,
+                                PropertyRepository propertyRepository) {
+        this.leaseRepository = leaseRepository;
+        this.maintenanceRequestRepository = maintenanceRequestRepository;
+        this.userRepository = userRepository;
+        this.propertyRepository = propertyRepository;
+    }
 
-    @Autowired
-    private PropertyRepository propertyRepository; // Lowercase to match field name
+    @Override
+    public long getActiveLeaseCount() {
+        return leaseRepository.countByStatus(LeaseStatus.ACTIVE);
+    }
 
-    @Autowired
-    private MaintenanceRequestRepository maintenanceRequestRepository;
+    @Override
+    public long getTotalLeaseCount() {
+        return leaseRepository.count();
+    }
+
+    @Override
+    public List<Lease> getStudentLeases(BaseUser student) {
+        if (!(student instanceof Student)) {
+            throw new IllegalArgumentException("User must be a Student");
+        }
+
+        List<Lease> leases = leaseRepository.findByTenant(student);
+
+        // Find historical leases (terminated or expired)
+        List<Lease> historicalLeases = leaseRepository.findHistoricalLeasesForStudent(student);
+
+        // Combine active and historical leases
+        leases.addAll(historicalLeases);
+
+        // Initialize associations to prevent LazyInitializationException
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
+    }
+
+    @Override
+    public List<Lease> getTeacherLeases(BaseUser teacher) {
+        if (!(teacher instanceof Teacher)) {
+            throw new IllegalArgumentException("User must be a Teacher");
+        }
+
+        // Find active lease
+        Lease activeLease = leaseRepository.findActiveLeaseForTeacher(teacher);
+
+        // Find historical leases (terminated or expired)
+        List<Lease> historicalLeases = leaseRepository.findHistoricalLeasesForTeacher(teacher);
+
+        // Combine active and historical leases
+        List<Lease> leases = historicalLeases;
+        if (activeLease != null) {
+            leases.add(0, activeLease); // Add active lease at the beginning
+        }
+
+        // Initialize associations to prevent LazyInitializationException
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
+    }
+
+    @Override
+    public List<Lease> getLeasesByBlock(String block) {
+        if (block == null || block.trim().isEmpty()) {
+            throw new IllegalArgumentException("Block cannot be null or empty");
+        }
+
+        List<Lease> leases = leaseRepository.findByPropertyBlock(block);
+
+        // Initialize associations to prevent LazyInitializationException
+        for (Lease lease : leases) {
+            if (lease.getTenant() != null) {
+                Hibernate.initialize(lease.getTenant());
+            }
+            if (lease.getProperty() != null) {
+                Hibernate.initialize(lease.getProperty());
+            }
+        }
+
+        return leases;
+    }
 
     @Override
     public DashboardData getDashboardData(BaseUser user) {
@@ -58,12 +151,12 @@ public class DashboardServiceImpl implements DashboardService {
             } else if (role == MaintenanceRole.MAINTENANCE_STAFF) {
                 populateMaintenanceStaffDashboard(maintenance, dashboardData);
             }
-        } else if (user instanceof HousingManagement housingManagment) {
-            HousingManagementRole role = housingManagment.getRole();
+        } else if (user instanceof HousingManagement housingManagement) {
+            HousingManagementRole role = housingManagement.getRole();
             if (role == HousingManagementRole.MANAGER) {
                 populateManagerDashboard(dashboardData);
             } else if (role == HousingManagementRole.BLOCK_MANAGER) {
-                populateBlockManagerDashboard(housingManagment.getBlock(), dashboardData);
+                populateBlockManagerDashboard(housingManagement.getBlock(), dashboardData);
             }
         } else if (user instanceof DSS dss) {
             DepartmentOfStudentServicesRole role = dss.getRole();
@@ -145,19 +238,19 @@ public class DashboardServiceImpl implements DashboardService {
 
     private void populateManagerDashboard(DashboardData dashboardData) {
         // Metrics
-        dashboardData.setUserCount(baseUserRepository.count());
+        dashboardData.setUserCount(userRepository.count());
         dashboardData.setPropertyCount(propertyRepository.count());
         dashboardData.setLeaseCount(leaseRepository.count());
         dashboardData.setMaintenanceRequestCount(maintenanceRequestRepository.count());
 
         // Detailed Statistics for User Types
         Map<String, Long> userTypeCounts = new HashMap<>();
-        userTypeCounts.put("Students", baseUserRepository.countByType(Student.class));
-        userTypeCounts.put("Teachers", baseUserRepository.countByType(Teacher.class));
-        userTypeCounts.put("Maintenance", baseUserRepository.countByType(Maintenance.class));
-        userTypeCounts.put("HousingManagement", baseUserRepository.countByType(HousingManagement.class));
-        userTypeCounts.put("FamilyMember", baseUserRepository.countByType(FamilyMember.class));
-        userTypeCounts.put("DSS", baseUserRepository.countByType(DSS.class));
+        userTypeCounts.put("Students", userRepository.countByType(Student.class));
+        userTypeCounts.put("Teachers", userRepository.countByType(Teacher.class));
+        userTypeCounts.put("Maintenance", userRepository.countByType(Maintenance.class));
+        userTypeCounts.put("HousingManagement", userRepository.countByType(HousingManagement.class));
+        userTypeCounts.put("FamilyMember", userRepository.countByType(FamilyMember.class));
+        userTypeCounts.put("DSS", userRepository.countByType(DSS.class));
         dashboardData.setUserTypeCounts(userTypeCounts);
 
         // Detailed Statistics for Property Types
@@ -242,10 +335,10 @@ public class DashboardServiceImpl implements DashboardService {
 
     private void populateDSSAssistantDashboard(DashboardData dashboardData) {
         // Student-specific Metrics
-        dashboardData.setUserCount(baseUserRepository.countByType(Student.class)); // Fix: Count only students
+        dashboardData.setUserCount(userRepository.countByType(Student.class)); // Fix: Count only students
 
         // Student Role Distribution
-        List<? extends BaseUser> studentList = baseUserRepository.findAllByType(Student.class);
+        List<? extends BaseUser> studentList = userRepository.findAllByType(Student.class);
         List<Student> students = studentList.stream()
                 .map(user -> (Student) user)
                 .toList();

@@ -40,7 +40,7 @@ public class SecurityConfig {
                 http
                         .authorizeHttpRequests(auth -> auth
                                 // Swagger and API docs endpoints
-                                .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/webjars/**")
+                                .requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/webjars/**")
                                 .permitAll()
 
                                 // Static resources
@@ -80,7 +80,7 @@ public class SecurityConfig {
                         )
                         // Enable CSRF protection, but disable for API and Swagger endpoints
                         .csrf(csrf -> csrf
-                                .ignoringRequestMatchers("/api/**", "/v3/api-docs/**", "/swagger-ui/**")
+                                .ignoringRequestMatchers("/api/**", "/swagger-ui/**")
                         );
 
                 return http.build();

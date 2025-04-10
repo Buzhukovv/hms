@@ -2,55 +2,52 @@ package housingManagment.hms.service.userService.impl;
 
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.HousingManagement;
-import housingManagment.hms.entities.userEntity.Teacher;
 import housingManagment.hms.enums.userEnum.HousingManagementRole;
-import housingManagment.hms.exception.ResourceNotFoundException;
 import housingManagment.hms.repository.userRepository.HousingManagementRepository;
-import housingManagment.hms.service.userService.HousingManagementService;
 import housingManagment.hms.service.userService.BaseUserService;
-
+import housingManagment.hms.service.userService.HousingManagementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-// TODO : Check all of the endpoints and add if business logic needs new endpoints
-
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class HousingManagementServiceImpl implements HousingManagementService {
 
-    @Autowired
-    private HousingManagementRepository housingManagementRepository;
-
-    @Autowired
-    private BaseUserService baseUserService;
+    private final HousingManagementRepository housingManagementRepository;
+    private final BaseUserService baseUserService;
 
     @Override
     public HousingManagement createUser(HousingManagement user) {
+        if (user == null) {
+            throw new IllegalArgumentException("HousingManagement user cannot be null");
+        }
         return (HousingManagement) housingManagementRepository.save(user);
     }
 
     @Override
     @Transactional
     public HousingManagement updateUser(UUID id, HousingManagement user) {
-        // Find the existing user using BaseUserService
+        if (id == null || user == null) {
+            throw new IllegalArgumentException("ID and user cannot be null");
+        }
         Optional<BaseUser> baseUser = baseUserService.findById(id);
-
-        // Verify that the user is a DSS instance
         if (baseUser.isEmpty()) {
+            throw new IllegalArgumentException("User with id " + id + " is not a HousingManagement user");
+        }
+
+        if (!(baseUser.get() instanceof HousingManagement)) {
             throw new IllegalArgumentException("User with id " + id + " is not a HousingManagement user");
         }
 
         HousingManagement existingUser = (HousingManagement) baseUser.get();
 
-        // Update fields
         existingUser.setFirstName(user.getFirstName());
         existingUser.setLastName(user.getLastName());
         existingUser.setMiddleName(user.getMiddleName());
@@ -64,32 +61,101 @@ public class HousingManagementServiceImpl implements HousingManagementService {
         existingUser.setRole(user.getRole());
         existingUser.setBlock(user.getBlock());
 
-        // Save and return the updated user
         return (HousingManagement) housingManagementRepository.save(existingUser);
     }
 
     @Override
     @Transactional
     public void deleteUser(UUID id) {
-        // Find the user using BaseUserService
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
         Optional<BaseUser> baseUser = baseUserService.findById(id);
-
-        // Verify that the user is a DSS instance
         if (baseUser.isEmpty()) {
             throw new IllegalArgumentException("User with id " + id + " is not a HousingManagement user");
         }
 
-        HousingManagement existingUser = (HousingManagement) baseUser.get();
+        if (!(baseUser.get() instanceof HousingManagement)) {
+            throw new IllegalArgumentException("User with id " + id + " is not a HousingManagement user");
+        }
 
-        // Delete the user
+        HousingManagement existingUser = (HousingManagement) baseUser.get();
         housingManagementRepository.delete(existingUser);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<HousingManagement> findById(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
+        if (baseUser.isPresent() && baseUser.get() instanceof HousingManagement) {
+            return Optional.of((HousingManagement) baseUser.get());
+        }
+        return Optional.empty();
+    }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<HousingManagement> findAll() {
+        return baseUserService.findAllByType(HousingManagement.class);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<HousingManagement> findHousingManagementByRole(HousingManagementRole role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
         return baseUserService.findAllByType(HousingManagement.class).stream()
                 .filter(hm -> hm.getRole() == role)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HousingManagement> findByBlock(String block) {
+        if (block == null || block.trim().isEmpty()) {
+            throw new IllegalArgumentException("Block cannot be null or empty");
+        }
+        return baseUserService.findAllByType(HousingManagement.class).stream()
+                .filter(hm -> block.equals(hm.getBlock()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void assignBlock(UUID id, String block) {
+        if (id == null || block == null || block.trim().isEmpty()) {
+            throw new IllegalArgumentException("ID and block cannot be null or empty");
+        }
+        Optional<HousingManagement> housingManagement = findById(id);
+        if (housingManagement.isEmpty()) {
+            throw new IllegalArgumentException("HousingManagement user with id " + id + " not found");
+        }
+        HousingManagement existingUser = housingManagement.get();
+        existingUser.setBlock(block);
+        housingManagementRepository.save(existingUser);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countByRole() {
+        return baseUserService.findAllByType(HousingManagement.class).stream()
+                .collect(Collectors.groupingBy(HousingManagement::getRole, Collectors.counting()))
+                .values().stream()
+                .mapToLong(Long::longValue)
+                .sum();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countByBlock() {
+        return baseUserService.findAllByType(HousingManagement.class).stream()
+                .collect(Collectors.groupingBy(HousingManagement::getBlock, Collectors.counting()))
+                .values().stream()
+                .mapToLong(Long::longValue)
+                .sum();
     }
 }

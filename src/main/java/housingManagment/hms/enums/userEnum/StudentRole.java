@@ -16,4 +16,5 @@ public enum StudentRole {
     DOCTORAL_STUDENT_5_Y,
     EXCHANGE_STUDENT,
     GUEST_STUDENT,
+    ALUMNI
 }

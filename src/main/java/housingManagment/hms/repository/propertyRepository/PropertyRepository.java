@@ -1,6 +1,8 @@
 package housingManagment.hms.repository.propertyRepository;
 
 import housingManagment.hms.entities.property.BaseProperty;
+import housingManagment.hms.entities.property.CampusApartment;
+import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.enums.property.PropertyStatus;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,16 +10,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Repository
 public interface PropertyRepository extends BasePropertyRepository<BaseProperty> {
 
-    /**
-     * Count properties by type
-     */
-    @Query("SELECT COUNT(p) FROM BaseProperty p WHERE TYPE(p) = :type")
-    long countByType(@Param("type") Class<? extends BaseProperty> type);
+    // Count properties by class belongin
+    @Query("SELECT COUNT(p) FROM BaseProperty p WHERE TYPE(p) = :propertyType")
+    long countByType(@Param("propertyType") Class<? extends BaseProperty> propertyType);
+    
 
     /**
      * Find all distinct property types

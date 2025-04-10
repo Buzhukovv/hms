@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/")
+@RequestMapping("/api/dashboard")
 @Tag(name = "Dashboard Controller", description = "APIs for dashboard management")
 public class DashboardController {
 
@@ -29,6 +29,13 @@ public class DashboardController {
     public DashboardController(DashboardService dashboardService, BaseUserService baseUserService) {
         this.dashboardService = dashboardService;
         this.baseUserService = baseUserService;
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getDashboardStats() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("activeLeases", dashboardService.getActiveLeaseCount());
+        return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/")
