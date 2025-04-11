@@ -11,7 +11,6 @@ public interface BaseUserService {
 
     Optional<BaseUser> findById(UUID id);
     BaseUser findByEmail(String email);
-    BaseUser updateUser(UUID id, BaseUser user);
 
     BaseUser findByNuid(int nuid);
 
@@ -32,5 +31,4 @@ public interface BaseUserService {
 
     <T extends BaseUser> long countByType(Class<T> userType);
 
-    Map<String, Object> countAllTenantTypes();
 }

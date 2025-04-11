@@ -27,101 +27,7 @@ import java.util.UUID;
 public class BaseUserController {
 
     private final BaseUserService baseUserService;
-    @Getter
-    public static class CreateUserRequest {
-        private String userType; // "Student", "Teacher", etc.
-        private String firstName;
-        private String lastName;
-        private String middleName;
-        private int nationalId;
-        private int nuid;
-        private int identityDocNo;
-        private LocalDate identityIssueDate;
-        private String email;
-        private String localPhone;
-        private String password;
-        private String vehicle;
-        private Gender gender;
-        private HousingManagementRole hm_role;
-        private DepartmentOfStudentServicesRole dss_role;
-        private String block;
-        private MaintenanceRole m_role;
-        private String relation;
-        private BaseUser mainUser ;
-        private SchoolsAndSpecialties school;
-        private TeacherPosition position;
-        private String specialty;
-        private StudentRole s_role;
-    }
 
-    @PostMapping
-    @Operation(summary = "Create a new user", description = "Creates a new user of any type")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "409", description = "User already exists")
-    })
-    public ResponseEntity<BaseUser> createUser(@RequestBody CreateUserRequest request) {
-        BaseUser user;
-
-        // ✅ Use enhanced switch with correct scoping
-        switch (request.getUserType()) {
-            case "Student" -> {
-                Student student = new Student();
-                student.setSchool(request.getSchool());
-                student.setSpecialty(request.getSpecialty());
-                student.setRole(request.getS_role());
-                user = student;
-            }
-            case "Teacher" -> {
-                Teacher teacher = new Teacher();
-                teacher.setPosition(request.getPosition());
-                teacher.setSchool(request.getSchool());
-                user = teacher;
-            }
-            case "DSS" -> {
-                DSS dss = new DSS();
-                dss.setRole(request.getDss_role());
-                user = dss;
-            }
-            case "Maintenance" -> {
-                Maintenance maintenance = new Maintenance();
-                maintenance.setRole(request.getM_role());
-                user = maintenance;
-            }
-            case "FamilyMember" -> {
-                FamilyMember fm = new FamilyMember();
-                fm.setRelation(request.getRelation());
-                fm.setMainUser(request.getMainUser());
-                user = fm;
-            }
-            case "HousingManagement" -> {
-                HousingManagement hm = new HousingManagement();
-                hm.setRole(request.getHm_role());
-                hm.setBlock(request.getBlock());
-                user = hm;
-            }
-            default -> throw new IllegalArgumentException("Unsupported user type: " + request.getUserType());
-        }
-
-        // ✅ Set shared base fields after instantiating the correct object
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setMiddleName(request.getMiddleName());
-        user.setNationalId(request.getNationalId());
-        user.setNuid(request.getNuid());
-        user.setIdentityDocNo(request.getIdentityDocNo());
-        user.setIdentityIssueDate(request.getIdentityIssueDate());
-        user.setLocalPhone(request.getLocalPhone());
-        user.setPassword(request.getPassword());
-        user.setVehicle(request.getVehicle());
-        user.setGender(request.getGender());
-        user.setEmail(request.getEmail());
-
-        // ✅ Save the constructed user
-        BaseUser created = baseUserService.save(user);
-        return ResponseEntity.ok(created);
-    }
 
 
     @GetMapping("/{id}")
@@ -136,17 +42,7 @@ public class BaseUserController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update a user", description = "Updates an existing user of any type")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User updated successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    public ResponseEntity<BaseUser> updateUser(@PathVariable UUID id, @RequestBody BaseUser user) {
-        BaseUser updated = baseUserService.updateUser(id, user);
-        return ResponseEntity.ok(updated);
-    }
+
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a user", description = "Deletes a user of any type by their ID")
@@ -238,13 +134,5 @@ public class BaseUserController {
         }
     }
 
-    @GetMapping("/count-all-tenant-types")
-    @Operation(summary = "Count all tenant types", description = "Returns a map of tenant types and their counts")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Counts retrieved successfully")
-    })
-    public ResponseEntity<Map<String, Object>> countAllTenantTypes() {
-        Map<String, Object> counts = baseUserService.countAllTenantTypes();
-        return ResponseEntity.ok(counts);
-    }
+
 }

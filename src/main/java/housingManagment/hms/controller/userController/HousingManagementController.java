@@ -22,18 +22,8 @@ import java.util.stream.Collectors;
 public class HousingManagementController {
 
     private final HousingManagementService service;
+//todo all get
 
-    @PostMapping
-    @Operation(summary = "Create a housing manager", description = "Creates a new housing manager")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Housing manager created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "409", description = "Housing manager already exists")
-    })
-    public ResponseEntity<HousingManagement> createUser(@RequestBody HousingManagement user) {
-        HousingManagement created = service.createUser(user);
-        return ResponseEntity.ok(created);
-    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get housing manager by ID", description = "Retrieves a housing manager by their ID")
@@ -47,28 +37,9 @@ public class HousingManagementController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update a housing manager", description = "Updates an existing housing manager")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Housing manager updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Housing manager not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    public ResponseEntity<HousingManagement> updateUser(@PathVariable UUID id, @RequestBody HousingManagement user) {
-        HousingManagement updated = service.updateUser(id, user);
-        return ResponseEntity.ok(updated);
-    }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a housing manager", description = "Deletes a housing manager by their ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Housing manager deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "Housing manager not found")
-    })
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
-        service.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
+
+
 
     @GetMapping("/by-role")
     @Operation(summary = "Get housing managers by role", description = "Retrieves housing managers filtered by their role")
@@ -113,6 +84,7 @@ public class HousingManagementController {
         service.assignBlock(id, block);
         return ResponseEntity.ok().build();
     }
+    //todo add param
 
     @GetMapping("/count-by-role")
     @Operation(summary = "Count housing managers by role", description = "Returns the count of housing managers by role")
@@ -123,7 +95,7 @@ public class HousingManagementController {
         long count = service.countByRole();
         return ResponseEntity.ok(count);
     }
-
+//todo add param for block
     @GetMapping("/count-by-block")
     @Operation(summary = "Count housing managers by block", description = "Returns the count of housing managers by block")
     @ApiResponses(value = {

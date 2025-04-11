@@ -271,6 +271,7 @@ public class StudentServiceImpl implements StudentService {
         if (school == null) {
             throw new IllegalArgumentException("School cannot be null");
         }
+
         return repository.findBySchool(school);
     }
 

@@ -32,11 +32,4 @@ public interface BaseUserRepository extends JpaRepository<BaseUser, UUID> {
         @Query("SELECT COUNT(u) FROM BaseUser u WHERE TYPE(u) = :userType")
         long countByType(@Param("userType") Class<? extends BaseUser> userType);
 
-        /**
-         * Count all users by type (returns a map of user type to count)
-         */
-        @Query("SELECT TYPE(u) as userType, COUNT(u) as count " +
-                "FROM BaseUser u " +
-                "GROUP BY TYPE(u)")
-        Map<String, Object> countAllTenantTypes();
 }

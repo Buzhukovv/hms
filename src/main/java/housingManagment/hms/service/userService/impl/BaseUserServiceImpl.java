@@ -75,34 +75,6 @@ public class BaseUserServiceImpl implements BaseUserService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional
-    public BaseUser updateUser(UUID id, BaseUser user) {
-        if (id == null || user == null) {
-            throw new IllegalArgumentException("ID and user cannot be null");
-        }
-        Optional<BaseUser> existingUserOpt = baseUserRepository.findById(id);
-        if (existingUserOpt.isEmpty()) {
-            throw new IllegalArgumentException("User with id " + id + " not found");
-        }
-
-        BaseUser existingUser = existingUserOpt.get();
-
-        // Update fields
-        existingUser.setFirstName(user.getFirstName());
-        existingUser.setLastName(user.getLastName());
-        existingUser.setMiddleName(user.getMiddleName());
-        existingUser.setNationalId(user.getNationalId());
-        existingUser.setNuid(user.getNuid());
-        existingUser.setIdentityDocNo(user.getIdentityDocNo());
-        existingUser.setIdentityIssueDate(user.getIdentityIssueDate());
-        existingUser.setEmail(user.getEmail());
-        existingUser.setLocalPhone(user.getLocalPhone());
-        existingUser.setPassword(user.getPassword());
-
-        // Save and return the updated user
-        return baseUserRepository.save(existingUser);
-    }
 
     @Override
     @Transactional
@@ -150,9 +122,5 @@ public class BaseUserServiceImpl implements BaseUserService {
         return baseUserRepository.countByType(userType);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Map<String, Object> countAllTenantTypes() {
-        return baseUserRepository.countAllTenantTypes();
-    }
+
 }

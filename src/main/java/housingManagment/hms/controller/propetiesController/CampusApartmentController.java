@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/campus-apartments")
-@Tag(name = "Property Controller", description = "APIs for managing properties")
+@Tag(name = "Property Controller CAMPUS", description = "APIs for managing properties")
 @RequiredArgsConstructor
 public class CampusApartmentController {
 

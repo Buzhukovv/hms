@@ -15,7 +15,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/townhouses")
 @RequiredArgsConstructor
-@Tag(name = "Property Controller")
+@Tag(name = "Property Controller TOWNHOUSE")
 public class TownhouseController {
 
     private final TownhouseService townhouseService;

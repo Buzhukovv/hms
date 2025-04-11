@@ -20,34 +20,13 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/api/teacher")
 @RequiredArgsConstructor
-@Tag(name = "User Management")
+@Tag(name = "Teacher Management")
 public class TeacherController {
 
     private final TeacherService service;
     private final BaseUserService baseUserService;
 
-    @PostMapping
-    @ResponseBody
-    @Operation(summary = "Create Teacher", description = "Creates a new Teacher user")
-    public ResponseEntity<Teacher> createUser(@RequestBody Teacher user) {
-        Teacher created = service.createUser(user);
-        return ResponseEntity.ok(created);
-    }
 
-    @PutMapping("/{id}")
-    @Operation (summary = "Update Teacher", description = "Updates the Teacher details for the given Teacher ID")
-    public ResponseEntity<Teacher> updateUser(@PathVariable UUID id,
-                                              @RequestBody Teacher user) {
-        Teacher updated = service.updateUser(id, user);
-        return ResponseEntity.ok(updated);
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation (summary = "Delete Teacher", description = "Deletes the Teacher associated with the given Teacher ID")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
-        service.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
 
     @GetMapping("/{id}")
     @Operation (summary = "Get Teacher by ID", description = "Fetches the Teacher details for the given Teacher ID")

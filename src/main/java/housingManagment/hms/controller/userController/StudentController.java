@@ -31,17 +31,7 @@ public class StudentController {
     private final StudentService studentService;
     private final LeaseService leaseService;
 
-    @PostMapping
-    @Operation(summary = "Create a new student", description = "Creates a new student with the provided information")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Student created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "409", description = "Student already exists")
-    })
-    public ResponseEntity<Student> createUser(@RequestBody Student user) {
-        Student created = studentService.createUser(user);
-        return ResponseEntity.ok(created);
-    }
+
 
     @GetMapping("/")
     @Operation(summary = "Get all students", description = "Retrieves all students from the database")
@@ -62,19 +52,6 @@ public class StudentController {
         return studentService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Update a student", description = "Updates an existing student's information")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Student updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Student not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    public ResponseEntity<Student> updateUser(@Parameter(description = "Student ID") @PathVariable UUID id,
-                                              @RequestBody Student user) {
-        Student updated = studentService.updateUser(id, user);
-        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
@@ -234,30 +211,8 @@ public class StudentController {
         return ResponseEntity.ok(leases);
     }
 
-    @PatchMapping("/{id}/change-role")
-    @Operation(summary = "Change student's role", description = "Updates the role of a student")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Role updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Student not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid role")
-    })
-    public ResponseEntity<Student> changeRole(@PathVariable UUID id, @RequestParam StudentRole role) {
-        Student updated = studentService.changeRole(id, role);
-        return ResponseEntity.ok(updated);
-    }
 
-    @PatchMapping("/{id}/change-school")
-    @Operation(summary = "Change student's school", description = "Updates the school of a student")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "School updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Student not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid school")
-    })
-    public ResponseEntity<Student> changeSchool(@PathVariable UUID id, @RequestParam SchoolsAndSpecialties school) {
-        Student updated = studentService.changeSchool(id, school);
-        return ResponseEntity.ok(updated);
-    }
-
+    //TODO do this for parameter, add them
     @GetMapping("/count-by-role")
     @Operation(summary = "Count students by role", description = "Returns the count of students by role")
     @ApiResponses(value = {
@@ -267,7 +222,7 @@ public class StudentController {
         long count = studentService.countByRole();
         return ResponseEntity.ok(count);
     }
-
+    //TODO do this for parameter, add them
     @GetMapping("/count-by-school")
     @Operation(summary = "Count students by school", description = "Returns the count of students by school")
     @ApiResponses(value = {
@@ -277,7 +232,7 @@ public class StudentController {
         long count = studentService.countBySchool();
         return ResponseEntity.ok(count);
     }
-
+    //TODO do this for parameter, add them
     @GetMapping("/count-by-specialty")
     @Operation(summary = "Count students by specialty", description = "Returns the count of students by specialty")
     @ApiResponses(value = {

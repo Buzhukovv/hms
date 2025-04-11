@@ -22,18 +22,8 @@ import java.util.stream.Collectors;
 public class DssController {
 
     private final DssService service;
+//todo get all dss
 
-    @PostMapping
-    @Operation(summary = "Create a DSS user", description = "Creates a new DSS user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "DSS user created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "409", description = "DSS user already exists")
-    })
-    public ResponseEntity<DSS> createUser(@RequestBody DSS user) {
-        DSS created = service.createUser(user);
-        return ResponseEntity.ok(created);
-    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get DSS user by ID", description = "Retrieves a DSS user by their ID")
@@ -47,28 +37,6 @@ public class DssController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update a DSS user", description = "Updates an existing DSS user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "DSS user updated successfully"),
-            @ApiResponse(responseCode = "404", description = "DSS user not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    public ResponseEntity<DSS> updateUser(@PathVariable UUID id, @RequestBody DSS user) {
-        DSS updated = service.updateUser(id, user);
-        return ResponseEntity.ok(updated);
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a DSS user", description = "Deletes a DSS user by their ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "DSS user deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "DSS user not found")
-    })
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
-        service.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
 
     @GetMapping("/by-role")
     @Operation(summary = "Get DSS users by role", description = "Retrieves DSS users filtered by their role")
@@ -92,7 +60,7 @@ public class DssController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
-
+//Todo add param
     @GetMapping("/count-by-role")
     @Operation(summary = "Count DSS users by role", description = "Returns the count of DSS users by role")
     @ApiResponses(value = {

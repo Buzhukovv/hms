@@ -14,7 +14,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/off-campus-properties")
 @RequiredArgsConstructor
-@Tag(name = "Property Controller")
+@Tag(name = "Property Controller OFFCAMPUS")
 public class OffCampusApartmentController {
 
     private final OffCampusApartmentService offCampusApartmentService;

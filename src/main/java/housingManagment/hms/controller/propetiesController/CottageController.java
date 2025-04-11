@@ -15,7 +15,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/cottages")
 @RequiredArgsConstructor
-@Tag(name = "Property Controller")
+@Tag(name = "Property Controller COTTAGE")
 public class CottageController {
 
     private final CottageService cottageService;
