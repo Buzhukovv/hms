@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 public class DssController {
 
     private final DssService service;
-//todo get all dss
     @GetMapping
     @Operation(summary = "Get all DSS users", description = "Retrieves all Department of Student Services (DSS) users")
     @ApiResponses(value = {
@@ -69,15 +68,26 @@ public class DssController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
-//Todo add param
-    @GetMapping("/count-by-role")
+    @GetMapping("/count-all")
     @Operation(summary = "Count DSS users by role", description = "Returns the count of DSS users by role")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Count retrieved successfully")
     })
-    public ResponseEntity<Long> countByRole() {
-        long count = service.countByRole();
+    public ResponseEntity<Long> countAllMember() {
+        long count = service.countByAll();
         return ResponseEntity.ok(count);
     }
+
+    @GetMapping("/count-by-role")
+    @Operation(summary = "Count DSS users by role", description = "Returns the count of DSS users by specified role")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Count retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid role parameter")
+    })
+    public ResponseEntity<Long> countByRole(@RequestParam DepartmentOfStudentServicesRole role) {
+        long count = service.countByRole(role);
+        return ResponseEntity.ok(count);
+    }
+
 
 }

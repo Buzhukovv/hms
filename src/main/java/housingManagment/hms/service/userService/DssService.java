@@ -17,5 +17,8 @@ public interface DssService {
 
     List<DSS> findDSSByRole(DepartmentOfStudentServicesRole role);
 
-    long countByRole();
+    long countByAll();
+
+    long countByRole(DepartmentOfStudentServicesRole role);
+
 }

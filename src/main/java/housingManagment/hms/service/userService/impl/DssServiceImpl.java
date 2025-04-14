@@ -115,11 +115,23 @@ public class DssServiceImpl implements DssService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countByRole() {
+    public long countByAll() {
         return baseUserService.findAllByType(DSS.class).stream()
                 .collect(Collectors.groupingBy(DSS::getRole, Collectors.counting()))
                 .values().stream()
                 .mapToLong(Long::longValue)
                 .sum();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countByRole(DepartmentOfStudentServicesRole role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+        return baseUserService.findAllByType(DSS.class).stream()
+                .filter(dss -> dss.getRole() == role)
+                .count();
+    }
+
 }
