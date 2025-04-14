@@ -141,7 +141,7 @@ public class HousingManagementServiceImpl implements HousingManagementService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countByRole() {
+    public long countAllMember() {
         return baseUserService.findAllByType(HousingManagement.class).stream()
                 .collect(Collectors.groupingBy(HousingManagement::getRole, Collectors.counting()))
                 .values().stream()
@@ -151,11 +151,25 @@ public class HousingManagementServiceImpl implements HousingManagementService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countByBlock() {
+    public long countByRole(HousingManagementRole role){
+        if(role == null){
+            throw new IllegalArgumentException();
+        }
         return baseUserService.findAllByType(HousingManagement.class).stream()
-                .collect(Collectors.groupingBy(HousingManagement::getBlock, Collectors.counting()))
-                .values().stream()
-                .mapToLong(Long::longValue)
-                .sum();
+                .filter(housingManagement -> housingManagement.getRole() == role)
+                .count();
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countByBlock(String block) {
+        if (block == null || block.trim().isEmpty()) {
+            throw new IllegalArgumentException("Block cannot be null or empty");
+        }
+
+        return baseUserService.findAllByType(HousingManagement.class).stream()
+                .filter(hm -> block.equals(hm.getBlock()))
+                .count();
     }
 }

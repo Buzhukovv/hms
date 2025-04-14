@@ -24,6 +24,13 @@ public class HousingManagementController {
     private final HousingManagementService service;
 //todo all get
 
+    @GetMapping
+    @Operation(summary = "Gett all member HM users")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "HS users retrieved successfully")})
+    public ResponseEntity<List<HousingManagement>> getAllHsUsers(){
+        List<HousingManagement> all_users = service.findAll();
+        return ResponseEntity.ok(all_users);
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get housing manager by ID", description = "Retrieves a housing manager by their ID")
@@ -84,25 +91,33 @@ public class HousingManagementController {
         service.assignBlock(id, block);
         return ResponseEntity.ok().build();
     }
-    //todo add param
 
+    @GetMapping("/count-all")
+    @Operation(summary = "Count housing managers by role", description = "Returns the count of housing managers by role")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Count retrieved successfully")
+    })
+    public ResponseEntity<Long> countAllMember() {
+        long count = service.countAllMember();
+        return ResponseEntity.ok(count);
+    }
     @GetMapping("/count-by-role")
     @Operation(summary = "Count housing managers by role", description = "Returns the count of housing managers by role")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Count retrieved successfully")
     })
-    public ResponseEntity<Long> countByRole() {
-        long count = service.countByRole();
+    public ResponseEntity<Long> countByRole(@RequestParam HousingManagementRole role) {
+        long count = service.countByRole(role);
         return ResponseEntity.ok(count);
     }
-//todo add param for block
+
     @GetMapping("/count-by-block")
     @Operation(summary = "Count housing managers by block", description = "Returns the count of housing managers by block")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Count retrieved successfully")
     })
-    public ResponseEntity<Long> countByBlock() {
-        long count = service.countByBlock();
+    public ResponseEntity<Long> countByBlock(@RequestParam String block) {
+        long count = service.countByBlock(block);
         return ResponseEntity.ok(count);
     }
 }

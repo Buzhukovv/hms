@@ -19,7 +19,8 @@ public interface HousingManagementService {
     List<HousingManagement> findByBlock(String block);
 
     void assignBlock(UUID id, String block);
+    long countByRole(HousingManagementRole role);
 
-    long countByRole();
-    long countByBlock();
+    long countAllMember();
+    long countByBlock(String block);
 }
