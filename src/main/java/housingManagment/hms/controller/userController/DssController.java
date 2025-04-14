@@ -23,6 +23,15 @@ public class DssController {
 
     private final DssService service;
 //todo get all dss
+    @GetMapping
+    @Operation(summary = "Get all DSS users", description = "Retrieves all Department of Student Services (DSS) users")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "DSS users retrieved successfully")
+    })
+    public ResponseEntity<List<DSS>> getAllDssUsers() {
+        List<DSS> allUsers = service.findAll();
+        return ResponseEntity.ok(allUsers);
+    }
 
 
     @GetMapping("/{id}")
