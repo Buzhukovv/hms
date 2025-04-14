@@ -212,34 +212,33 @@ public class StudentController {
     }
 
 
-    //TODO do this for parameter, add them
     @GetMapping("/count-by-role")
     @Operation(summary = "Count students by role", description = "Returns the count of students by role")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Count retrieved successfully")
     })
-    public ResponseEntity<Long> countByRole() {
-        long count = studentService.countByRole();
+    public ResponseEntity<Long> countByRole(@RequestParam StudentRole role) {
+        long count = studentService.countByRole(role);
         return ResponseEntity.ok(count);
     }
-    //TODO do this for parameter, add them
     @GetMapping("/count-by-school")
     @Operation(summary = "Count students by school", description = "Returns the count of students by school")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Count retrieved successfully")
     })
-    public ResponseEntity<Long> countBySchool() {
-        long count = studentService.countBySchool();
+    public ResponseEntity<Long> countBySchool(@RequestParam SchoolsAndSpecialties school) {
+        long count = studentService.countBySchool(school);
         return ResponseEntity.ok(count);
     }
-    //TODO do this for parameter, add them
     @GetMapping("/count-by-specialty")
-    @Operation(summary = "Count students by specialty", description = "Returns the count of students by specialty")
+    @Operation(summary = "Count students by specialty", description = "Returns the count of students by specified specialty")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Count retrieved successfully")
+            @ApiResponse(responseCode = "200", description = "Count retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid specialty parameter")
     })
-    public ResponseEntity<Long> countBySpecialty() {
-        long count = studentService.countBySpecialty();
+    public ResponseEntity<Long> countBySpecialty(@RequestParam String specialty) {
+        long count = studentService.countBySpecialty(specialty);
         return ResponseEntity.ok(count);
     }
+
 }

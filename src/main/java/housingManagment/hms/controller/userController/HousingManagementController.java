@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 public class HousingManagementController {
 
     private final HousingManagementService service;
-//todo all get
 
     @GetMapping
     @Operation(summary = "Gett all member HM users")

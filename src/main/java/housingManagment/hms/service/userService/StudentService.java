@@ -29,7 +29,7 @@ public interface StudentService {
     Student changeRole(UUID id, StudentRole role);
     Student changeSchool(UUID id, SchoolsAndSpecialties school);
 
-    long countByRole();
-    long countBySchool();
-    long countBySpecialty();
+    long countByRole(StudentRole role);
+    long countBySchool(SchoolsAndSpecialties school);
+    long countBySpecialty(String specialty);
 }

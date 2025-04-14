@@ -237,32 +237,32 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countByRole() {
+    public long countByRole(StudentRole role) {
+        if(role == null){
+            throw new IllegalArgumentException();
+        }
         return baseUserService.findAllByType(Student.class).stream()
-                .collect(Collectors.groupingBy(Student::getRole, Collectors.counting()))
-                .values().stream()
-                .mapToLong(Long::longValue)
-                .sum();
+                .filter(student -> student.getRole() == role)
+                .count();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long countBySchool() {
+    public long countBySchool(SchoolsAndSpecialties school) {
         return baseUserService.findAllByType(Student.class).stream()
-                .collect(Collectors.groupingBy(Student::getSchool, Collectors.counting()))
-                .values().stream()
-                .mapToLong(Long::longValue)
-                .sum();
+                .filter(student -> school.equals(student.getSchool()))
+                .count();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long countBySpecialty() {
+    public long countBySpecialty(String specialty) {
+        if (specialty == null || specialty.trim().isEmpty()) {
+            throw new IllegalArgumentException("Specialty cannot be null or empty");
+        }
         return baseUserService.findAllByType(Student.class).stream()
-                .collect(Collectors.groupingBy(Student::getSpecialty, Collectors.counting()))
-                .values().stream()
-                .mapToLong(Long::longValue)
-                .sum();
+                .filter(student -> specialty.equalsIgnoreCase(student.getSpecialty()))
+                .count();
     }
 
     @Override

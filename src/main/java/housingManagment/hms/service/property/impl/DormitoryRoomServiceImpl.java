@@ -14,7 +14,6 @@ import org.springframework.cache.annotation.Cacheable;
 import java.util.List;
 import java.util.UUID;
 
-// TODO : Check all of the endpoints and add if business logic needs new endpoints
 
 @Service
 @RequiredArgsConstructor
