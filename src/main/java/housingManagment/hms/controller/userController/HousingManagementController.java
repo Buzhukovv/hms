@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,18 @@ import java.util.stream.Collectors;
 public class HousingManagementController {
 
     private final HousingManagementService service;
+//todo add enum blocks
+
+    @PostMapping
+    @Operation(summary = "Создать Housing Manager ", description = "Создает нового пользователя Housing")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Пользователь успешно создан")
+    })
+    public ResponseEntity<HousingManagement> createUser(@RequestBody HousingManagement user) {
+        HousingManagement createdUser = service.createUser(user);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    }
+
 
     @GetMapping
     @Operation(summary = "Gett all member HM users")

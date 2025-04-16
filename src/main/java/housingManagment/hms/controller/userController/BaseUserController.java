@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
+//todo do the application form
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -72,7 +72,7 @@ public class BaseUserController {
             @ApiResponse(responseCode = "200", description = "User found"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    public ResponseEntity<BaseUser> getUserByNuid(@RequestParam int nuid) {
+    public ResponseEntity<BaseUser> getUserByNuid(@RequestParam String nuid) {
         BaseUser user = baseUserService.findByNuid(nuid);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
@@ -83,7 +83,7 @@ public class BaseUserController {
             @ApiResponse(responseCode = "200", description = "User found"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    public ResponseEntity<BaseUser> getUserByNationalId(@RequestParam int nationalId) {
+    public ResponseEntity<BaseUser> getUserByNationalId(@RequestParam String nationalId) {
         BaseUser user = baseUserService.findByNationalId(nationalId);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }

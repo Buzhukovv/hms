@@ -53,7 +53,7 @@ public class TeacherController {
 
     @GetMapping("/nuid/{nuid}")
     @Operation(summary = "Get User by NUID", description = "Fetches the user details for the given NUID")
-    public ResponseEntity<BaseUser> getUserByNuid(@PathVariable int nuid) {
+    public ResponseEntity<BaseUser> getUserByNuid(@PathVariable String nuid) {
         BaseUser user = baseUserService.findByNuid(nuid);
         return ResponseEntity.ok(user);
     }

@@ -12,9 +12,9 @@ public interface BaseUserService {
     Optional<BaseUser> findById(UUID id);
     BaseUser findByEmail(String email);
 
-    BaseUser findByNuid(int nuid);
+    BaseUser findByNuid(String nuid);
 
-    BaseUser findByNationalId(int nationalId);
+    BaseUser findByNationalId(String nationalId);
 
     List<BaseUser> findAll();
 

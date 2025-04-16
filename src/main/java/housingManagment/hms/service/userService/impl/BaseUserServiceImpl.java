@@ -42,19 +42,13 @@ public class BaseUserServiceImpl implements BaseUserService {
 
     @Override
     @Transactional(readOnly = true)
-    public BaseUser findByNuid(int nuid) {
-        if (nuid <= 0) {
-            throw new IllegalArgumentException("NUID must be a positive integer");
-        }
+    public BaseUser findByNuid(String nuid) {
         return baseUserRepository.findByNuid(nuid);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BaseUser findByNationalId(int nationalId) {
-        if (nationalId <= 0) {
-            throw new IllegalArgumentException("National ID must be a positive integer");
-        }
+    public BaseUser findByNationalId(String nationalId) {
         return baseUserRepository.findByNationalId(nationalId);
     }
 

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,17 @@ import java.util.stream.Collectors;
 public class DssController {
 
     private final DssService service;
+
+    @PostMapping
+    @Operation(summary = "Создать DSS пользователя", description = "Создает нового пользователя службы поддержки студентов (DSS)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Пользователь успешно создан")
+    })
+    public ResponseEntity<DSS> createUser(@RequestBody DSS user) {
+        DSS createdUser = service.createUser(user);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    }
+
     @GetMapping
     @Operation(summary = "Get all DSS users", description = "Retrieves all Department of Student Services (DSS) users")
     @ApiResponses(value = {
