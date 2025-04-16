@@ -6,12 +6,14 @@ import housingManagment.hms.exception.ResourceNotFoundException;
 import housingManagment.hms.repository.propertyRepository.DormitoryRoomRepository;
 import housingManagment.hms.service.property.DormitoryRoomService;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +24,6 @@ public class DormitoryRoomServiceImpl implements DormitoryRoomService {
 
     @Override
     public DormitoryRoom createProperty(DormitoryRoom property) {
-
         return repository.save(property);
     }
 
@@ -47,28 +48,65 @@ public class DormitoryRoomServiceImpl implements DormitoryRoomService {
     @Transactional(readOnly = true)
     @Cacheable(value = "propertyQueries", key = "#id")
     public DormitoryRoom getPropertyById(UUID id) {
-        return repository.findById(id)
+        DormitoryRoom room = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("DormitoryRoom not found with id: " + id));
+
+        // Initialize any lazy-loaded collections
+        Hibernate.initialize(room);
+
+        return room;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DormitoryRoom> getAllProperties() {
-        return repository.findAll();
+        List<DormitoryRoom> rooms = repository.findAll();
+
+        // Initialize any lazy-loaded collections for each room
+        for (DormitoryRoom room : rooms) {
+            Hibernate.initialize(room);
+        }
+
+        return rooms;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DormitoryRoom> getPropertiesByStatus(PropertyStatus status) {
-        return repository.findByStatus(status);
+        List<DormitoryRoom> rooms = repository.findByStatus(status);
+
+        // Initialize any lazy-loaded collections for each room
+        for (DormitoryRoom room : rooms) {
+            Hibernate.initialize(room);
+        }
+
+        return rooms;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DormitoryRoom> searchProperties(String keyword) {
-        return repository.searchProperties(keyword);
+        List<DormitoryRoom> rooms = repository.searchProperties(keyword);
+
+        // Initialize any lazy-loaded collections for each room
+        for (DormitoryRoom room : rooms) {
+            Hibernate.initialize(room);
+        }
+
+        return rooms;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DormitoryRoom> getAvailableProperties() {
-        return repository.findAvailableProperties();
+        List<DormitoryRoom> rooms = repository.findAvailableProperties();
+
+        // Initialize any lazy-loaded collections for each room
+        for (DormitoryRoom room : rooms) {
+            Hibernate.initialize(room);
+        }
+
+        return rooms;
     }
 
     @Override
@@ -79,7 +117,15 @@ public class DormitoryRoomServiceImpl implements DormitoryRoomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DormitoryRoom> getPropertiesByPriceRange(Double minPrice, Double maxPrice) {
-        return repository.findByRentBetween(minPrice, maxPrice);
+        List<DormitoryRoom> rooms = repository.findByRentBetween(minPrice, maxPrice);
+
+        // Initialize any lazy-loaded collections for each room
+        for (DormitoryRoom room : rooms) {
+            Hibernate.initialize(room);
+        }
+
+        return rooms;
     }
 }

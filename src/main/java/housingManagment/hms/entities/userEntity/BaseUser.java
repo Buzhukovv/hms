@@ -1,6 +1,7 @@
 package housingManagment.hms.entities.userEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import housingManagment.hms.enums.userEnum.Gender;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Table(name = "user_base")
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public abstract class BaseUser {
 
     @Id
@@ -31,10 +32,10 @@ public abstract class BaseUser {
     private String middleName;
 
     @Column(nullable = false, unique = true)
-    private int nationalId;
+    private String nationalId;
 
     @Column(unique = true)
-    private int nuid;
+    private String nuid;
 
     @Column(nullable = false)
     private int identityDocNo;
@@ -51,4 +52,7 @@ public abstract class BaseUser {
     private String password;
 
     private String vehicle;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 }

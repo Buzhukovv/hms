@@ -6,6 +6,10 @@ spring:
       minimum-idle: 2
       idle-timeout: 30000
       connection-timeout: 20000
+    url: jdbc:postgresql://13.48.128.129:5432/hms_db
+    username: hms_user
+    password: hms_password
+    driver-class-name: org.postgresql.Driver
   jpa:
     open-in-view: true
     properties:
@@ -21,6 +25,9 @@ spring:
         query:
           plan_cache_max_size: 64
           plan_parameter_metadata_max_size: 32
+        hibernate:
+          ddl-auto: update
+    show-sql: false
   # Restrict file upload size
   servlet:
     multipart:
@@ -33,12 +40,18 @@ spring:
       min-spare-threads: 5
       max-connections: 200
       accept-count: 100
+    port: 8080
   thymeleaf:
     cache: true
 
 # Disable API documentation in production
 springdoc:
   api-docs:
-    enabled: false
-  swagger-ui:
-    enabled: false
+    enabled: true
+#
+#logging:
+#  level:
+#    root: INFO
+#    housingManagment.hms: DEBUG
+#    org.hibernate.SQL: DEBUG
+##    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

@@ -1,14 +1,17 @@
 package housingManagment.hms.service.userService.impl;
 
+import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.Maintenance;
-import housingManagment.hms.exception.ResourceNotFoundException;
+import housingManagment.hms.enums.userEnum.MaintenanceRole;
 import housingManagment.hms.repository.userRepository.MaintenanceRepository;
+import housingManagment.hms.service.userService.BaseUserService;
 import housingManagment.hms.service.userService.MaintenanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -17,16 +20,34 @@ import java.util.stream.Collectors;
 @Transactional
 public class MaintenanceServiceImpl implements MaintenanceService {
 
-    private final MaintenanceRepository repository;
+    private final MaintenanceRepository maintenanceRepository;
+    private final BaseUserService baseUserService;
 
     @Override
     public Maintenance createUser(Maintenance user) {
-        return repository.save(user);
+        if (user == null) {
+            throw new IllegalArgumentException("Maintenance user cannot be null");
+        }
+        return (Maintenance) maintenanceRepository.save(user);
     }
 
     @Override
+    @Transactional
     public Maintenance updateUser(UUID id, Maintenance user) {
-        Maintenance existingUser = getUserById(id);
+        if (id == null || user == null) {
+            throw new IllegalArgumentException("ID and user cannot be null");
+        }
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
+        if (baseUser.isEmpty()) {
+            throw new IllegalArgumentException("User with id " + id + " is not a Maintenance user");
+        }
+
+        if (!(baseUser.get() instanceof Maintenance)) {
+            throw new IllegalArgumentException("User with id " + id + " is not a Maintenance user");
+        }
+
+        Maintenance existingUser = (Maintenance) baseUser.get();
+
         existingUser.setFirstName(user.getFirstName());
         existingUser.setLastName(user.getLastName());
         existingUser.setMiddleName(user.getMiddleName());
@@ -38,42 +59,66 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         existingUser.setLocalPhone(user.getLocalPhone());
         existingUser.setPassword(user.getPassword());
         existingUser.setRole(user.getRole());
-        return repository.save(existingUser);
+
+        return (Maintenance) maintenanceRepository.save(existingUser);
     }
 
     @Override
+    @Transactional
     public void deleteUser(UUID id) {
-        Maintenance user = getUserById(id);
-        repository.delete(user);
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
+        if (baseUser.isEmpty()) {
+            throw new IllegalArgumentException("User with id " + id + " is not a Maintenance user");
+        }
+
+        if (!(baseUser.get() instanceof Maintenance)) {
+            throw new IllegalArgumentException("User with id " + id + " is not a Maintenance user");
+        }
+
+        Maintenance existingUser = (Maintenance) baseUser.get();
+        maintenanceRepository.delete(existingUser);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Maintenance getUserById(UUID id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance user not found with id: " + id));
+    public Optional<Maintenance> findById(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
+        if (baseUser.isPresent() && baseUser.get() instanceof Maintenance) {
+            return Optional.of((Maintenance) baseUser.get());
+        }
+        return Optional.empty();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Maintenance> getAllUsers() {
-        return repository.findAll();
+    public List<Maintenance> findAll() {
+        return baseUserService.findAllByType(Maintenance.class);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Maintenance> searchUsersByNameOrLastName(String keyword) {
-        return repository.findAll().stream()
-                .filter(user -> user.getFirstName().toLowerCase().contains(keyword.toLowerCase()) ||
-                                user.getLastName().toLowerCase().contains(keyword.toLowerCase()))
+    public List<Maintenance> findMaintenanceByRole(MaintenanceRole role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+        return baseUserService.findAllByType(Maintenance.class).stream()
+                .filter(m -> m.getRole() == role)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Maintenance> getUsersByRole(String role) {
-        return repository.findAll().stream()
-                .filter(user -> user.getRole().name().equalsIgnoreCase(role))
-                .collect(Collectors.toList());
+    public long countByRole() {
+        return baseUserService.findAllByType(Maintenance.class).stream()
+                .collect(Collectors.groupingBy(Maintenance::getRole, Collectors.counting()))
+                .values().stream()
+                .mapToLong(Long::longValue)
+                .sum();
     }
 }

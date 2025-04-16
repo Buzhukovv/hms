@@ -22,13 +22,13 @@
                 <!-- Search and Filter -->
                 <div class="card mb-4">
                     <div class="card-body">
-                        <form method="get" action="/students" class="row g-3">
+                        <form method="get" action="/student" class="row g-3">
                             <div class="col-md-6">
                                 <label for="search" class="form-label">Search</label>
                                 <input type="text" class="form-control" id="search" name="search"
-                                    th:value="${param.search}" placeholder="Search by name or last name">
+                                    th:value="${param.search}" placeholder="Search by name or last name or NUID">
                             </div>
-                            <div class="col-md-4">
+                                <div class="col-md-3">
                                 <label for="role" class="form-label">Role</label>
                                 <select class="form-select" id="role" name="role">
                                     <option value="" selected>All Roles</option>
@@ -40,11 +40,14 @@
                                         th:selected="${param.role == 'BACHELOR_DEGREE_3_Y'}">Bachelor 3rd Year</option>
                                     <option value="BACHELOR_DEGREE_4_Y"
                                         th:selected="${param.role == 'BACHELOR_DEGREE_4_Y'}">Bachelor 4th Year</option>
-                                    <option value="MASTER_STUDENT" th:selected="${param.role == 'MASTER_STUDENT'}">
-                                        Master
-                                        Student</option>
-                                    <option value="DOCTORAL_STUDENT" th:selected="${param.role == 'DOCTORAL_STUDENT'}">
-                                        Doctoral Student</option>
+                                    <option value="MASTER_STUDENT_1_Y"
+                                        th:selected="${param.role == 'MASTER_STUDENT_1_Y'}">Master 1st Year</option>
+                                    <option value="MASTER_STUDENT_2_Y"
+                                        th:selected="${param.role == 'MASTER_STUDENT_2_Y'}">Master 2nd Year</option>
+                                    <option value="DOCTORAL_STUDENT_1_Y"
+                                        th:selected="${param.role == 'DOCTORAL_STUDENT_1_Y'}">Doctoral 1st Year</option>
+                                    <option value="DOCTORAL_STUDENT_2_Y"
+                                        th:selected="${param.role == 'DOCTORAL_STUDENT_2_Y'}">Doctoral 2nd Year</option>
                                 </select>
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
@@ -61,6 +64,7 @@
                             <table class="table table-striped table-hover">
                                 <thead>
                                     <tr>
+                                        <th>NUID</th>
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Phone</th>
@@ -72,6 +76,7 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="student : ${students}">
+                                        <td th:text="${student.nuid}">20233133</td>
                                         <td th:text="${student.firstName + ' ' + student.lastName}">John Doe</td>
                                         <td th:text="${student.email}">john@example.com</td>
                                         <td th:text="${student.localPhone}">+1234567890</td>
