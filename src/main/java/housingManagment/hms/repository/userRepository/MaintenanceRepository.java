@@ -7,11 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface MaintenanceRepository extends BaseUserRepository<Maintenance> {
-    // Поиск по имени или фамилии
-    List<Maintenance> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName,
-            String lastName);
-
+public interface MaintenanceRepository extends BaseUserRepository {
     // Поиск по роли (MAINTENANCE_MANAGER или MAINTENANCE_STAFF)
     List<Maintenance> findByRole(MaintenanceRole role);
 }

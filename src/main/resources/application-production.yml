@@ -48,10 +48,10 @@ spring:
 springdoc:
   api-docs:
     enabled: true
-
-logging:
-  level:
-    root: INFO
-    housingManagment.hms: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+#
+#logging:
+#  level:
+#    root: INFO
+#    housingManagment.hms: DEBUG
+#    org.hibernate.SQL: DEBUG
+##    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

@@ -4,6 +4,7 @@ package housingManagment.hms.controller.propetiesController;
 import housingManagment.hms.entities.property.Townhouse;
 import housingManagment.hms.enums.property.PropertyStatus;
 import housingManagment.hms.service.property.TownhouseService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/townhouses")
 @RequiredArgsConstructor
+@Tag(name = "Property Controller TOWNHOUSE")
 public class TownhouseController {
 
     private final TownhouseService townhouseService;

@@ -7,11 +7,11 @@ import housingManagment.hms.entities.userEntity.Student;
 import housingManagment.hms.entities.userEntity.Teacher;
 import housingManagment.hms.entities.userEntity.DSS;
 import housingManagment.hms.repository.userRepository.HousingManagementRepository;
+import housingManagment.hms.repository.userRepository.BaseUserRepository;
 import housingManagment.hms.repository.userRepository.MaintenanceRepository;
 import housingManagment.hms.repository.userRepository.StudentRepository;
 import housingManagment.hms.repository.userRepository.TeacherRepository;
 import housingManagment.hms.repository.userRepository.DepartmentOfStudentServicesRepository;
-import housingManagment.hms.repository.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,7 +32,7 @@ import java.util.Optional;
 @Slf4j
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final BaseUserRepository baseUserRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final MaintenanceRepository maintenanceRepository;
@@ -44,22 +44,21 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         log.debug("Attempting to authenticate user with email: {}", email);
 
-        Optional<? extends BaseUser> userOpt = findUserByEmail(email);
-        if (userOpt.isEmpty()) {
+        BaseUser userOpt = findUserByEmail(email);
+        if (userOpt == null) {
             log.warn("User not found with email: {}", email);
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
 
-        BaseUser user = userOpt.get();
-        log.debug("User found: {} ({})", user.getEmail(), user.getClass().getSimpleName());
+        log.debug("User found: {} ({})", userOpt.getEmail(), userOpt.getClass().getSimpleName());
 
-        List<GrantedAuthority> authorities = getAuthoritiesForUser(user);
+        List<GrantedAuthority> authorities = getAuthoritiesForUser(userOpt);
 
         // Return the user details - password validation is handled by the custom
         // AuthenticationProvider
         return new User(
-                user.getEmail(),
-                user.getPassword(),
+                userOpt.getEmail(),
+                userOpt.getPassword(),
                 true, // enabled
                 true, // accountNonExpired
                 true, // credentialsNonExpired
@@ -67,35 +66,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 authorities);
     }
 
-    private Optional<? extends BaseUser> findUserByEmail(String email) {
-        // Try to find the user in each repository
-        Optional<Student> student = studentRepository.findByEmail(email);
-        if (student.isPresent()) {
-            return student;
-        }
-
-        Optional<Teacher> teacher = teacherRepository.findByEmail(email);
-        if (teacher.isPresent()) {
-            return teacher;
-        }
-
-        Optional<Maintenance> maintenance = maintenanceRepository.findByEmail(email);
-        if (maintenance.isPresent()) {
-            return maintenance;
-        }
-
-        Optional<HousingManagement> housingManagement = housingManagementRepository.findByEmail(email);
-        if (housingManagement.isPresent()) {
-            return housingManagement;
-        }
-
-        Optional<DSS> dss = dssRepository.findByEmail(email);
-        if (dss.isPresent()) {
-            return dss;
-        }
-
+    private BaseUser findUserByEmail(String email) {
         // Fallback to the generic user repository
-        return userRepository.findByEmail(email);
+        return baseUserRepository.findByEmail(email);
     }
 
     private List<GrantedAuthority> getAuthoritiesForUser(BaseUser user) {

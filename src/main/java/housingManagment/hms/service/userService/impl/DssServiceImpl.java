@@ -1,14 +1,17 @@
-package housingManagment.hms.service.userService.impl;
+package housingManagment.hms.service.userService.impl.DssServiceImpl;
 
+import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.DSS;
-import housingManagment.hms.exception.ResourceNotFoundException;
+import housingManagment.hms.enums.userEnum.DepartmentOfStudentServicesRole;
 import housingManagment.hms.repository.userRepository.DepartmentOfStudentServicesRepository;
+import housingManagment.hms.service.userService.BaseUserService;
 import housingManagment.hms.service.userService.DssService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -18,15 +21,33 @@ import java.util.stream.Collectors;
 public class DssServiceImpl implements DssService {
 
     private final DepartmentOfStudentServicesRepository repository;
+    private final BaseUserService baseUserService;
 
     @Override
     public DSS createUser(DSS user) {
-        return repository.save(user);
+        if (user == null) {
+            throw new IllegalArgumentException("DSS user cannot be null");
+        }
+        return (DSS) repository.save(user);
     }
 
     @Override
+    @Transactional
     public DSS updateUser(UUID id, DSS user) {
-        DSS existingUser = getUserById(id);
+        if (id == null || user == null) {
+            throw new IllegalArgumentException("ID and user cannot be null");
+        }
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
+        if (baseUser.isEmpty()) {
+            throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
+        }
+
+        if (!(baseUser.get() instanceof DSS)) {
+            throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
+        }
+
+        DSS existingUser = (DSS) baseUser.get();
+
         existingUser.setFirstName(user.getFirstName());
         existingUser.setLastName(user.getLastName());
         existingUser.setMiddleName(user.getMiddleName());
@@ -38,42 +59,79 @@ public class DssServiceImpl implements DssService {
         existingUser.setLocalPhone(user.getLocalPhone());
         existingUser.setPassword(user.getPassword());
         existingUser.setRole(user.getRole());
-        return repository.save(existingUser);
+
+        return (DSS) repository.save(existingUser);
     }
 
     @Override
+    @Transactional
     public void deleteUser(UUID id) {
-        DSS user = getUserById(id);
-        repository.delete(user);
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
+        if (baseUser.isEmpty()) {
+            throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
+        }
+
+        if (!(baseUser.get() instanceof DSS)) {
+            throw new IllegalArgumentException("User with id " + id + " is not a DSS user");
+        }
+
+        DSS existingUser = (DSS) baseUser.get();
+        repository.delete(existingUser);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public DSS getUserById(UUID id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("DepartmentOfStudentServices user not found with id: " + id));
+    public Optional<DSS> findById(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
+        Optional<BaseUser> baseUser = baseUserService.findById(id);
+        if (baseUser.isPresent() && baseUser.get() instanceof DSS) {
+            return Optional.of((DSS) baseUser.get());
+        }
+        return Optional.empty();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<DSS> getAllUsers() {
-        return repository.findAll();
+    public List<DSS> findAll() {
+        return baseUserService.findAllByType(DSS.class);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<DSS> searchUsersByNameOrLastName(String keyword) {
-        return repository.findAll().stream()
-                .filter(user -> user.getFirstName().toLowerCase().contains(keyword.toLowerCase()) ||
-                                user.getLastName().toLowerCase().contains(keyword.toLowerCase()))
+    public List<DSS> findDSSByRole(DepartmentOfStudentServicesRole role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+        return baseUserService.findAllByType(DSS.class).stream()
+                .filter(dss -> dss.getRole() == role)
                 .collect(Collectors.toList());
     }
 
+
     @Override
     @Transactional(readOnly = true)
-    public List<DSS> getUsersByRole(String role) {
-        return repository.findAll().stream()
-                .filter(user -> user.getRole().name().equalsIgnoreCase(role))
-                .collect(Collectors.toList());
+    public long countByAll() {
+        return baseUserService.findAllByType(DSS.class).stream()
+                .collect(Collectors.groupingBy(DSS::getRole, Collectors.counting()))
+                .values().stream()
+                .mapToLong(Long::longValue)
+                .sum();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countByRole(DepartmentOfStudentServicesRole role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+        return baseUserService.findAllByType(DSS.class).stream()
+                .filter(dss -> dss.getRole() == role)
+                .count();
+    }
+
 }

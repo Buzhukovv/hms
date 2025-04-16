@@ -23,4 +23,7 @@ public class DSS extends BaseUser {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DepartmentOfStudentServicesRole role;
+
+
+
 }

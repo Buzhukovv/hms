@@ -17,7 +17,7 @@
     
     <!-- Set log level for Hibernate -->
     <logger name="org.hibernate" level="WARN"/>
-    <logger name="org.hibernate.SQL" level="DEBUG"/>
+<!--    <logger name="org.hibernate.SQL" level="DEBUG"/>-->
     
     <!-- Only show SQL query parameters when needed -->
     <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN"/>

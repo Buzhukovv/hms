@@ -7,10 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TeacherRepository extends BaseUserRepository<Teacher> {
-    // Поиск по имени или фамилии
-    List<Teacher> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName);
-
+public interface TeacherRepository extends BaseUserRepository {
     // Поиск по школе
     List<Teacher> findBySchool(SchoolsAndSpecialties school);
 }

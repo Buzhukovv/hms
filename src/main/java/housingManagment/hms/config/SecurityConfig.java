@@ -2,7 +2,7 @@ package housingManagment.hms.config;
 
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.service.userService.CustomUserDetailsService;
-import housingManagment.hms.service.userService.UserService;
+import housingManagment.hms.service.userService.BaseUserService; // Ensure this import matches your package structure
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,6 +23,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Configuration
 @EnableWebSecurity
@@ -32,37 +33,55 @@ public class SecurityConfig {
 
         private final CustomUserDetailsService userDetailsService;
         private final PasswordEncoder passwordEncoder;
-        private final UserService userService;
+        private final BaseUserService baseUserService;
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .authorizeHttpRequests(auth -> auth
-                                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .authorizeHttpRequests(auth -> auth
+                                // Swagger and API docs endpoints
+                                .requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/webjars/**")
+                                .permitAll()
 
-                                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**",
-                                                                "/error")
-                                                .permitAll()
-                                                .requestMatchers("/login", "/logout").permitAll()
-                                                .requestMatchers("/api/**").hasAnyRole("ADMIN", "MANAGER")
-                                                .anyRequest().authenticated())
-                                .formLogin(form -> form
-                                                .loginPage("/login")
-                                                .defaultSuccessUrl("/", true)
-                                                .failureUrl("/login?error=true")
-                                                .successHandler(authenticationSuccessHandler())
-                                                .permitAll())
-                                .logout(logout -> logout
-                                                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                                                .logoutSuccessUrl("/login?logout=true")
-                                                .invalidateHttpSession(true)
-                                                .clearAuthentication(true)
-                                                .deleteCookies("JSESSIONID")
-                                                .permitAll())
-                                .rememberMe(rememberMe -> rememberMe
-                                                .key("uniqueAndSecretKey")
-                                                .tokenValiditySeconds(86400) // 1 day
-                                );
+                                // Static resources
+                                .requestMatchers("/css/**", "/js/**", "/images/**", "/error")
+                                .permitAll()
+
+                                // Authentication endpoints
+                                .requestMatchers("/login", "/logout")
+                                .permitAll()
+
+                                // API endpoints
+                                .requestMatchers("/api/**")
+                                .authenticated()
+
+                                // All other requests require authentication
+                                .anyRequest()
+                                .authenticated()
+                        )
+                        .formLogin(form -> form
+                                .loginPage("/login")
+                                .defaultSuccessUrl("/", true)
+                                .failureUrl("/login?error=true")
+                                .successHandler(authenticationSuccessHandler())
+                                .permitAll()
+                        )
+                        .logout(logout -> logout
+                                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                                .logoutSuccessUrl("/login?logout=true")
+                                .invalidateHttpSession(true)
+                                .clearAuthentication(true)
+                                .deleteCookies("JSESSIONID")
+                                .permitAll()
+                        )
+                        .rememberMe(rememberMe -> rememberMe
+                                .key("uniqueAndSecretKey")
+                                .tokenValiditySeconds(86400) // 1 day
+                        )
+                        // Enable CSRF protection, but disable for API and Swagger endpoints
+                        .csrf(csrf -> csrf
+                                .ignoringRequestMatchers("/api/**", "/swagger-ui/**")
+                        );
 
                 return http.build();
         }
@@ -72,16 +91,18 @@ public class SecurityConfig {
                 return new AuthenticationSuccessHandler() {
                         @Override
                         public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+                                                            Authentication authentication) throws IOException, ServletException {
                                 HttpSession session = request.getSession();
                                 String email = authentication.getName();
 
                                 try {
-                                        BaseUser user = userService.getUserByEmail(email);
+                                        // Unwrap the Optional<BaseUser> and throw an exception if the user is not found
+                                        BaseUser user = baseUserService.findByEmail(email);
                                         String fullName = user.getFirstName() + " " + user.getLastName();
                                         session.setAttribute("userFullName", fullName);
                                 } catch (Exception e) {
-                                        // Continue with authentication even if we can't set the full name
+                                        // Log the error and continue with authentication
+                                        System.err.println("Error setting user full name in session: " + e.getMessage());
                                 }
 
                                 response.sendRedirect("/");

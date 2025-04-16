@@ -29,7 +29,7 @@ public class DormitoryRoom extends BaseProperty {
     @Column(nullable = false)
     private RoomTypeDormitory roomType;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Double area;
 
 }

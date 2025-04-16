@@ -32,10 +32,10 @@ public abstract class BaseUser {
     private String middleName;
 
     @Column(nullable = false, unique = true)
-    private int nationalId;
+    private String nationalId;
 
     @Column(unique = true)
-    private int nuid;
+    private String nuid;
 
     @Column(nullable = false)
     private int identityDocNo;

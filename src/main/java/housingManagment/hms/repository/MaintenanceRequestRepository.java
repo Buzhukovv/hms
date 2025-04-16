@@ -54,89 +54,31 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
         long countByStatusAndCreatedAtBetween(String status, LocalDateTime startDate, LocalDateTime endDate);
 
         /**
-         * Calculate average resolution time in days for requests completed in a period
-         */
-        @Query(value = "SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (completed_at - created_at)) / 86400.0), 0) " +
-                        "FROM maintenance_requests " +
-                        "WHERE completed_at BETWEEN :startDate AND :endDate " +
-                        "AND status = 'COMPLETED'", nativeQuery = true)
-        double calculateAverageResolutionTime(@Param("startDate") LocalDateTime startDate,
-                        @Param("endDate") LocalDateTime endDate);
-
-        /**
          * Get request count by status
          */
         @Query(value = "SELECT status as status, COUNT(*) as count " +
-                        "FROM maintenance_requests " +
-                        "WHERE created_at BETWEEN :startDate AND :endDate " +
-                        "GROUP BY status", nativeQuery = true)
+                "FROM maintenance_requests " +
+                "WHERE created_at BETWEEN :startDate AND :endDate " +
+                "GROUP BY status", nativeQuery = true)
         Map<String, Object> getRequestStatusCounts(@Param("startDate") LocalDateTime startDate,
-                        @Param("endDate") LocalDateTime endDate);
+                                                   @Param("endDate") LocalDateTime endDate);
 
         /**
          * Get request count by type
          */
         @Query(value = "SELECT request_type as requestType, COUNT(*) as count " +
-                        "FROM maintenance_requests " +
-                        "WHERE created_at BETWEEN :startDate AND :endDate " +
-                        "GROUP BY request_type", nativeQuery = true)
+                "FROM maintenance_requests " +
+                "WHERE created_at BETWEEN :startDate AND :endDate " +
+                "GROUP BY request_type", nativeQuery = true)
         Map<String, Object> getRequestTypeCounts(@Param("startDate") LocalDateTime startDate,
-                        @Param("endDate") LocalDateTime endDate);
+                                                 @Param("endDate") LocalDateTime endDate);
 
-        /**
-         * Calculate total cost for maintenance requests in a period
-         */
-        @Query(value = "SELECT COALESCE(SUM(cost), 0) " +
-                        "FROM maintenance_requests " +
-                        "WHERE created_at BETWEEN :startDate AND :endDate " +
-                        "AND status = 'COMPLETED'", nativeQuery = true)
-        double calculateTotalCostBetween(@Param("startDate") LocalDateTime startDate,
-                        @Param("endDate") LocalDateTime endDate);
 
-        /**
-         * Get maintenance cost by request type
-         */
-        @Query(value = "SELECT request_type as requestType, SUM(cost) as cost " +
-                        "FROM maintenance_requests " +
-                        "WHERE created_at BETWEEN :startDate AND :endDate " +
-                        "AND status = 'COMPLETED' " +
-                        "GROUP BY request_type", nativeQuery = true)
-        Map<String, Object> getCostByRequestType(@Param("startDate") LocalDateTime startDate,
-                        @Param("endDate") LocalDateTime endDate);
+        @Query("SELECT mr FROM MaintenanceRequest mr " +
+                "JOIN mr.lease l " +
+                "JOIN l.property p " +
+                "WHERE p.propertyBlock = :block")
+        List<MaintenanceRequest> findByPropertyBlock(@Param("block") String block);
 
-        /**
-         * Get performance metrics for specified maintenance staff
-         */
-        @Query(value = "SELECT " +
-                        "assigned_to as staffId, " +
-                        "CONCAT(u.first_name, ' ', u.last_name) as name, " +
-                        "COUNT(m.id) as completedRequests, " +
-                        "COALESCE(AVG(EXTRACT(EPOCH FROM (m.completed_at - m.created_at)) / 86400.0), 0) as averageResolutionTime "
-                        +
-                        "FROM maintenance_requests m " +
-                        "JOIN user_base u ON m.assigned_to = u.id " +
-                        "WHERE m.status = 'COMPLETED' " +
-                        "AND m.completed_at BETWEEN :startDate AND :endDate " +
-                        "AND m.assigned_to IN :staffIds " +
-                        "GROUP BY m.assigned_to, u.first_name, u.last_name", nativeQuery = true)
-        List<Map<String, Object>> getStaffPerformanceByIds(@Param("staffIds") List<UUID> staffIds,
-                        @Param("startDate") LocalDateTime startDate,
-                        @Param("endDate") LocalDateTime endDate);
 
-        /**
-         * Get performance metrics for all maintenance staff
-         */
-        @Query(value = "SELECT " +
-                        "assigned_to as staffId, " +
-                        "CONCAT(u.first_name, ' ', u.last_name) as name, " +
-                        "COUNT(m.id) as completedRequests, " +
-                        "COALESCE(AVG(EXTRACT(EPOCH FROM (m.completed_at - m.created_at)) / 86400.0), 0) as averageResolutionTime "
-                        +
-                        "FROM maintenance_requests m " +
-                        "JOIN user_base u ON m.assigned_to = u.id " +
-                        "WHERE m.status = 'COMPLETED' " +
-                        "AND m.completed_at BETWEEN :startDate AND :endDate " +
-                        "GROUP BY m.assigned_to, u.first_name, u.last_name", nativeQuery = true)
-        List<Map<String, Object>> getAllStaffPerformance(@Param("startDate") LocalDateTime startDate,
-                        @Param("endDate") LocalDateTime endDate);
 }
