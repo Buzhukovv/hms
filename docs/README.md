@@ -25,7 +25,7 @@ cd your-project-directory
 ### 2. Build and start services
 
 ```bash
-./mvnw clean package
+./mvnw clean package -DskipTests  
 docker-compose up --build
 ```
 if docker-compose up --build doesnot work type:
