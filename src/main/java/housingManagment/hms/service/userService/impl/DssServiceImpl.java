@@ -1,4 +1,4 @@
-package housingManagment.hms.service.userService.impl.DssServiceImpl;
+package housingManagment.hms.service.userService.impl;
 
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.entities.userEntity.DSS;

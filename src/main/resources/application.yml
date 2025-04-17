@@ -5,9 +5,9 @@
 #    password: hms_password
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/hms_db
-    username: hms_user
-    password: hms_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/hms_db_v2}
+    username: ${SPRING_DATASOURCE_USERNAME:hms_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:hms_password}
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -19,27 +19,9 @@ spring:
         show_sql: false
         format_sql: true
 
-
-# Swagger UI / OpenAPI Configuration
 springdoc:
   api-docs:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
     operationsSorter: method
-#    tagsSorter: alpha
-#    tryItOutEnabled: true
-#    filter: true
-#    syntax-highlight:
-#      activated: true
-
-# Logging levels
-#logging:
-#  level:
-#    org.hibernate.SQL: OFF
-#    org.hibernate.type.descriptor.sql.BasicBinder: OFF
-#    org.springframework.jdbc.core.JdbcTemplate: OFF
-#    org.springframework.jdbc.core.StatementCreatorUtils:
-#    org.springframework.web: TRACE
-#    org.springframework.security: TRACE
-#

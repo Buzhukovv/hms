@@ -38,6 +38,8 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
+                        .cors() // <--- Добавь это
+                        .and()
                         .authorizeHttpRequests(auth -> auth
                                 // Swagger and API docs endpoints
                                 .requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/webjars/**")

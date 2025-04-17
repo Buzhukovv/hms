@@ -1,132 +1,121 @@
-# HMS Documentation
+# Housing Management System (HMS) - Backend
 
-## Database Setup
+This project is the backend service for the Housing Management System, built with Java Spring Boot and PostgreSQL.
 
-### Dockerized PostgreSQL Database
+---
 
-The application uses a Docker container for the PostgreSQL database. To set up and run the database:
+## 🚀 Getting Started with Docker
 
-1. Make sure Docker is installed on your system
-2. Navigate to the project root directory
-3. Run the following command to start the database:
+### 📦 Prerequisites
 
-   ```bash
-   docker-compose up -d
-   ```
+- Docker
+- Docker Compose
 
-This will:
+---
 
-- Create a PostgreSQL 16 container named `hms_postgres`
-- Create a database named `hms_db`
-- Create a user `hms_user` with password `hms_password`
-- Map the database port to 5432 on your host machine
-- Set up proper permissions for the application to access the database
+## ⚙️ Setup Instructions
 
-To verify the database is running:
+### 1. Clone the repository
 
 ```bash
-docker ps
+git clone https://your-repo-url.git
+cd your-project-directory
 ```
 
-To check database logs:
+### 2. Build and start services
 
 ```bash
-docker logs hms_postgres
+./mvnw clean package
+docker-compose up --build
 ```
-
-To stop the database:
+if docker-compose up --build doesnot work type:
 
 ```bash
-docker-compose down
+docker compose up --build
 ```
 
-To stop the database and remove all data:
+> ✅ Make sure your JAR file is located at `target/hms-0.0.1-SNAPSHOT.jar`.
+
+---
+
+## 🧠 Project Structure
+
+- `backend` — Java Spring Boot application
+- `postgres` — PostgreSQL 16 container
+- `docker-compose.yml` — orchestrates backend and database
+- `.env` or environment variables (used for DB credentials)
+
+---
+
+## 🔁 Database Info
+
+- **Database name**: `hms_db_v2`
+- **Username**: `hms_user`
+- **Password**: `hms_password`
+- **Port**: `5432`
+
+If you need to restore the DB from a dump:
 
 ```bash
-docker-compose down -v
+docker cp hms_dump0000011111010101010100010.sql hms_postgres:/tmp/
+docker exec -it hms_postgres psql -U hms_user -d hms_db_v2 -f /tmp/hms_dump0000011111010101010100010.sql
 ```
 
-### Database Configuration
+---
 
-The application is configured to connect to the database with the following settings:
+## 🌐 API Access
 
-- Host: localhost
-- Port: 5432
-- Database: hms_db
-- Username: hms_user
-- Password: hms_password
+- **Base URL for frontend**: `http://localhost:8080`
+- **Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **API Docs**: [http://localhost:8080/api-docs](http://localhost:8080/api-docs)
 
-These settings are defined in `src/main/resources/application-production.yml`.
+---
 
-## Application Setup
+## 🔒 CORS Configuration
 
-1. Clone the repository
-2. Navigate to the project directory
-3. Build the project:
+The backend allows requests from the following origin:
 
-   ```bash
-   mvn clean install
-   ```
-
-4. Run the application:
-
-   ```bash
-   mvn spring-boot:run
-   ```
-
-## Development
-
-### Prerequisites
-
-- Java 17 or higher
-- Maven 3.6 or higher
-- Docker (for database)
-- PostgreSQL client (optional, for direct database access)
-
-### Running Tests
-
-```bash
-mvn test
+```
+http://localhost:3000
 ```
 
-### Building for Production
+If your frontend is running on a different port or domain, update it in:
 
-```bash
-mvn clean package -Pproduction
+```java
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            .allowedOrigins("http://localhost:3000")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true);
+    }
+}
 ```
 
-## Troubleshooting
+---
 
-### Database Connection Issues
+## 🧪 Health Check
 
-If you encounter database connection issues:
+The database container uses:
 
-1. Verify the Docker container is running:
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "pg_isready -U hms_user -d hms_db_v2"]
+```
 
-   ```bash
-   docker ps
-   ```
+---
 
-2. Check database logs for errors:
+## 🕸️ Frontend Notes
 
-   ```bash
-   docker logs hms_postgres
-   ```
+To successfully connect your frontend:
 
-3. Verify database user and permissions:
+- Use `http://localhost:8080` as the backend base URL
+- Ensure the backend is fully up before sending requests
+- Axios/fetch requests should include credentials if needed (`withCredentials: true`)
 
-   ```bash
-   docker exec -it hms_postgres psql -U postgres -c "\du"
-   ```
+---
 
-4. Test database connection:
-
-   ```bash
-   docker exec -it hms_postgres psql -U hms_user -d hms_db -c "SELECT 1;"
-   ```
-
-### Common Issues
-
-1. Port conflicts: If port 5432 is already in use, modify the port mapping in `docker-compose.yml`
-2. Permission issues: Ensure the database user has proper permissions
-3. Connection timeouts: Check if the Docker container is running and accessible
+Happy coding!

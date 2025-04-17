@@ -7,18 +7,36 @@ services:
     environment:
       POSTGRES_USER: hms_user
       POSTGRES_PASSWORD: hms_password
-      POSTGRES_DB: hms_db
+      POSTGRES_DB: hms_db_v2
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hms_user -d hms_db"]
+      test: ["CMD-SHELL", "pg_isready -U hms_user -d hms_db_v2"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - hms_network
+
+  backend:
+    container_name: hms_backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hms_network
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hms_db_v2
+      SPRING_DATASOURCE_USERNAME: hms_user
+      SPRING_DATASOURCE_PASSWORD: hms_password
+
 
 volumes:
   postgres_data:
