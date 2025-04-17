@@ -57,7 +57,7 @@ docker compose up --build
 If you need to restore the DB from a dump:
 
 ```bash
-docker cp hms_dump0000011111010101010100010.sql hms_postgres:/tmp/
+docker exec -it hms_postgres psql -U hms_user -d hms_db_v2 -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 docker exec -it hms_postgres psql -U hms_user -d hms_db_v2 -f /tmp/hms_dump0000011111010101010100010.sql
 ```
 
