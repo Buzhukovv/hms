@@ -3,7 +3,7 @@ package housingManagment.hms.service.userService.impl;
 import housingManagment.hms.entities.userEntity.BaseUser;
 import housingManagment.hms.repository.userRepository.BaseUserRepository;
 import housingManagment.hms.service.userService.BaseUserService;
-import org.springframework.security.access.prepost.PreAuthorize;
+//import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,7 +72,7 @@ public class BaseUserServiceImpl implements BaseUserService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('MANAGER')")
+//    @PreAuthorize("hasRole('MANAGER')")
     public BaseUser save(BaseUser user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");

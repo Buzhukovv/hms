@@ -16,9 +16,9 @@ import housingManagment.hms.service.userService.BaseUserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.core.Authentication;
+//import org.springframework.security.core.context.SecurityContextHolder;
+//import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,7 +40,7 @@ public class AuthController {
     private final MaintenanceRepository maintenanceRepository;
     private final HousingManagementRepository housingManagementRepository;
     private final DepartmentOfStudentServicesRepository dssRepository;
-    private final PasswordEncoder passwordEncoder;
+//    private final PasswordEncoder passwordEncoder;
 
     /**
      * Display login page
@@ -48,11 +48,32 @@ public class AuthController {
     @GetMapping("/login")
     public String loginPage() {
         // If user is already authenticated, redirect to dashboard
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
-            return "redirect:/";
-        }
+//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//        if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
+//            return "redirect:/";
+//        }
         return "auth/login";
     }
+    @PostMapping("/login")
+    public String handleLogin(@RequestParam String email,
+                              @RequestParam String password,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
+
+        Optional<BaseUser> optionalUser = Optional.ofNullable(baseUserService.findByEmail(email));
+
+        if (optionalUser.isPresent()) {
+            BaseUser user = optionalUser.get();
+
+            if (password.equals(user.getPassword())) {
+                session.setAttribute("loggedInUser", user);
+                return "redirect:/";
+            }
+        }
+
+        redirectAttributes.addFlashAttribute("error", "Invalid email or password");
+        return "redirect:/login";
+    }
+
 
 }

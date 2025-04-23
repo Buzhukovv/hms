@@ -33,7 +33,7 @@ services:
     networks:
       - hms_network
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hms_db_v2
+      SPRING_DATASOURCE_URL: jdbc:postgresql://hms_postgres:5432/hms_db_v2
       SPRING_DATASOURCE_USERNAME: hms_user
       SPRING_DATASOURCE_PASSWORD: hms_password
 

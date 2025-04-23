@@ -5,7 +5,10 @@
 #    password: hms_password
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/hms_db_v2}
+#    url: jdbc:postgresql://localhost:5432/hms_db_v2
+#    username: hms_user
+#    password: hms_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/hms_db_v2}
     username: ${SPRING_DATASOURCE_USERNAME:hms_user}
     password: ${SPRING_DATASOURCE_PASSWORD:hms_password}
   jpa:
